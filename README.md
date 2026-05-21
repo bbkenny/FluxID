@@ -208,14 +208,13 @@ FluxID is being executed in three distinct phases. We keep our word and deliver 
 - ✅ **Phase 1: MVP (Single Wallet Scoring) — COMPLETED**
   We have successfully built the core scoring engine, live dashboard, and AI explainability. The foundation is set.
 
-- 🏗️ **Phase 2: Scale (Protocol Intelligence) — IN PROGRESS**
+- ✅ **Phase 2: Scale (Protocol Intelligence) — COMPLETED**
 
   - **User-base health metrics**: Aggregate scoring and health monitoring for whole ecosystems.
   - **Risk heatmaps & alerts**: Visual risk clustering and early warning system for large-scale drops in trust.
   - **API-first infrastructure**: Programmable trust signals for developers and platforms.
   - **X402 agentic payments**: Enabling AI agents to pay for intelligence on-chain.
-
-  and  **Scalable Protocol Sync Engine (Advanced)** that introduces a background synchronization system that enables full user-base analysis.
+  - **Scalable Protocol Sync Engine (Advanced)**: Introduces a background synchronization system that enables full user-base analysis.
 
 
 - 🔮 **Phase 3: Outcome (Internet of Value) — UPCOMING (FINAL PHASE)**
@@ -254,6 +253,7 @@ A real-time, behavior-based trust layer for financial systems.
 - 🌐 **Live App:** [https://fluxid.vercel.app/](https://fluxid.vercel.app/)
 - 📊 **Pitch Deck:** [View Presentation](https://docs.google.com/presentation/d/1RkhWXOQRWWKaiUFeHB_PFUDzVjQmw2m8/edit?usp=sharing&ouid=111174088021239989424&rtpof=true&sd=true)
 - ▶️ **Demo Video:** [View Demo Video](https://www.loom.com/share/ba5e12068bae47b1ac6d504b3f1039d2)
+- 🐦 **Social Media:** [https://x.com/useFluxID](https://x.com/useFluxID)
 
 ---
 
