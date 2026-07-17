@@ -4,6 +4,121 @@
 
 ---
 
+## 🎯 The Right Strategy
+
+### FluxID = Main Project (Builder Track)
+
+It's already built, live, and close to Blue Belt. This is your horse — ride it. Focus 90% of energy here: screenshots → submit Levels 1–3 → prove users → Level 4 → Level 5 → Mainnet → Black Belt. That's the prize pool path.
+
+### AgriT = The Vertical (Startup Track)
+
+AgriT isn't just a separate project. It's actually **FluxID's first real-world customer.** Think about it:
+
+```
+AgriT needs:  "credit score for a farmer wallet"
+FluxID does:  "credit score for any Stellar wallet"
+
+AgriT calls FluxID's API → gets score → mints VYC based on that score
+```
+
+The VYC contract already has a `score: u32` field that's designed to receive FluxID's output. The integration is basically already there in the contract design.
+
+### Why Keep Them Separate Repos (For Now)
+
+- Different tracks — Builder Track (FluxID) vs Startup Track (AgriT)
+- The program says you can't be in both tracks the same month
+- Keeping them separate lets you pitch the relationship as "ecosystem infrastructure + vertical application" — a stronger story for SCF grants later
+- When ready, AgriT simply calls FluxID's API — no code merge needed, just an API call
+
+### The Roadmap
+
+```
+July     → Submit FluxID for Levels 1–3 (screenshots are the only blocker)
+July     → Submit AgriT Idea Submission (Orange Belt — just an idea form)
+
+August   → FluxID: prove 10+ users → Level 4 (Green Belt)
+August   → AgriT: build basic frontend → submit as Startup Track entry
+
+Later    → AgriT integrates FluxID scoring via API → combined SCF pitch
+```
+
+> **The one thing blocking you right now is screenshots.** Everything else is built.
+
+---
+
+## 📸 Screenshots Needed — Guide
+
+**Use TESTNET screenshots** for all Level 1–3 submissions. The program explicitly says "testnet" for Levels 1–4. The live app at `fluxid.vercel.app` already runs on testnet by default — so just use it as-is.
+
+### The 4 screenshots you need to take:
+
+| # | Screenshot | What to show | Where in UI |
+|---|-----------|-------------|-------------|
+| 1 | **Wallet Connected** | Freighter connected, wallet address visible | Dashboard top bar / header |
+| 2 | **Balance Displayed** | XLM balance (and any other assets) shown on screen | Dashboard main panel |
+| 3 | **Sending a Transaction** | The send/payment form filled out with address + amount | Payment/agent demo flow |
+| 4 | **Transaction Result** | Success state showing the transaction hash (or X402 paid confirmation) | Result panel after sending |
+
+### Where to put them in the README:
+
+Add a `## 📸 Screenshots` section to `FluxID/README.md` like this:
+
+```markdown
+## 📸 Screenshots
+
+### Wallet Connected
+![Wallet Connected](./docs/screenshots/wallet-connected.png)
+
+### Balance Displayed
+![Balance](./docs/screenshots/balance.png)
+
+### Sending a Transaction
+![Send Transaction](./docs/screenshots/send-transaction.png)
+
+### Transaction Result
+![Transaction Result](./docs/screenshots/transaction-result.png)
+```
+
+Save the images to: `FluxID/docs/screenshots/` (create the folder).
+
+---
+
+## 🔗 Contract Deployment Status
+
+> **The contract was NOT deployed on mainnet. It is testnet only.**
+
+Here's the exact status from the code:
+
+| Network | Status | Contract ID in `.env` |
+|---------|--------|----------------------|
+| **Testnet** | ✅ Deployed (real contract ID in `.env`) | Set |
+| **Mainnet** | ❌ NOT deployed — placeholder ID in `.env.example` shows `CAAAAAA...` (all zeros = dummy) | Not set |
+
+**How we know:**
+- `STELLAR_NETWORK=testnet` is the default in `app.config.ts`
+- `deploy-mainnet` in the `Makefile` exists but has never been run
+- The `.env.example` shows `MAINNET_CONTRACT_ID=CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADX3W` — that's the zero-address placeholder, not a real deployed contract
+
+### What this means for submissions:
+
+- **Levels 1–5** → ✅ testnet is correct, you're fine
+- **Level 6 (Black Belt)** → ❌ you will need to redeploy the updated contract (`score_input_hash` version) to **mainnet** before submitting
+
+### ⚠️ Important: The contract was updated today
+
+Today we changed `set_score()` to require a 5th argument (`score_input_hash: BytesN<32>`). The **old deployed testnet contract** does NOT have this. You need to redeploy to testnet (and eventually mainnet) with the new contract.
+
+**To redeploy testnet contract:**
+```bash
+cd FluxID/smartcontract
+make build
+make deploy-testnet
+# Copy the new contract ID → paste into backend/.env as TESTNET_CONTRACT_ID
+make init-testnet
+```
+
+---
+
 ## TL;DR
 
 | Project | Current State | Belt Readiness | Status |
