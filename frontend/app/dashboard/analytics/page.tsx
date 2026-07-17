@@ -201,8 +201,15 @@ function WeeklyTrend({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card p-6 mb-6"
+      className="card p-6 mb-6 relative overflow-hidden"
     >
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+        <img 
+          src="/3d-imgs-assest/fluxid_behavioral_graph.png" 
+          alt="Behavior Graph" 
+          className="w-full h-full object-cover opacity-10 mix-blend-screen"
+        />
+      </div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h3 style={{ color: "var(--foreground)", fontWeight: 700, fontSize: 16 }}>Weekly Trend</h3>
         <span style={{ color: "var(--foreground-muted)", fontSize: 11 }}>

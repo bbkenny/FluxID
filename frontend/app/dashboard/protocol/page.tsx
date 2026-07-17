@@ -622,8 +622,16 @@ export default function ProtocolDashboard() {
           border: "1px solid var(--border)",
           borderRadius: 20,
         }}
-        className="p-8 text-center"
+        className="p-8 text-center relative overflow-hidden card"
       >
+        <div className="absolute inset-0 flex items-center justify-start pointer-events-none z-0">
+          <img 
+            src="/3d-imgs-assest/fluxid_protocol_intelligence.png" 
+            alt="Protocol Background" 
+            className="w-[400px] object-contain opacity-[0.08] translate-y-12 -translate-x-12 mix-blend-screen"
+          />
+        </div>
+        <div className="relative z-10">
         <h3 style={{ color: "var(--foreground)", fontWeight: 800, fontSize: 20 }} className="mb-2">
           Protocol Intelligence API
         </h3>
@@ -642,6 +650,7 @@ export default function ProtocolDashboard() {
           >
             View API Docs →
           </a>
+        </div>
         </div>
       </div>
     </div>

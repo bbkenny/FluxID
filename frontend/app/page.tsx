@@ -63,6 +63,14 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <section className="relative max-w-7xl mx-auto px-5 pt-16 pb-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[55vh]">
+        {/* Abstract 3D background floating behind everything */}
+        <div className="absolute inset-0 flex items-center justify-end pointer-events-none overflow-hidden z-0">
+          <img 
+            src="/3d-imgs-assest/fluxid_hero_illustration.png" 
+            alt="Hero Background" 
+            className="w-[800px] md:w-[1200px] max-w-none object-contain opacity-20 -rotate-12 blur-[2px]"
+          />
+        </div>
 
         {/* Left copy */}
         <motion.div
@@ -190,7 +198,14 @@ export default function Home() {
       </section>
 
       {/* ── Features ── */}
-      <section id="how-it-works" className="max-w-7xl mx-auto px-5 py-28">
+      <section id="how-it-works" className="relative max-w-7xl mx-auto px-5 py-28">
+        <div className="absolute inset-0 flex items-center justify-start pointer-events-none overflow-hidden z-0">
+          <img 
+            src="/3d-imgs-assest/fluxid_liquidity_flow.png" 
+            alt="Liquidity Flow" 
+            className="w-[600px] md:w-[900px] max-w-none object-contain opacity-10 mix-blend-screen translate-y-20 -translate-x-20"
+          />
+        </div>
         {/* Section header — scroll reveal */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -262,8 +277,15 @@ export default function Home() {
 
       {/* ── Footer ── */}
       <footer
-        className="py-8 px-5 card mt-12 mb-4 mx-4 rounded-3xl"
+        className="relative py-8 px-5 card mt-12 mb-4 mx-4 rounded-3xl overflow-hidden"
       >
+        <div className="absolute inset-0 flex items-end justify-end pointer-events-none z-0">
+          <img 
+            src="/3d-imgs-assest/fluxid_risk_detection.png" 
+            alt="Risk Background" 
+            className="w-[400px] md:w-[600px] max-w-none object-contain opacity-[0.08] translate-y-1/4 translate-x-1/4"
+          />
+        </div>
         <div className="max-w-2xl mx-auto text-center mb-6">
           <h2
             style={{ color: "var(--foreground)", letterSpacing: "-0.04em" }}

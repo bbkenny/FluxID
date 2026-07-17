@@ -111,9 +111,16 @@ function DashboardSummary({
     <motion.div initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Score + risk */}
       <motion.div
-        className="card p-6 md:col-span-2 flex items-center gap-6 flex-wrap"
+        className="card p-6 md:col-span-2 flex items-center gap-6 flex-wrap relative overflow-hidden"
         id="tour-score-display"
       >
+        <div className="absolute inset-0 flex items-center justify-end pointer-events-none z-0">
+          <img 
+            src="/3d-imgs-assest/fluxid_trust_score_orb.png" 
+            alt="Score Orb" 
+            className="w-[250px] object-contain opacity-[0.15] translate-x-12 mix-blend-screen"
+          />
+        </div>
         <div className="relative shrink-0">
           <svg width="160" height="160" viewBox="0 0 160 160">
             <circle cx="80" cy="80" r="66" fill="none" stroke="var(--border)" strokeWidth="12" />

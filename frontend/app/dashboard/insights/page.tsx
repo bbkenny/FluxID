@@ -39,7 +39,18 @@ export default function InsightsPage() {
               Target: {analyzedAddress}
             </p>
           )}
-          <ExplanationCard explanation={analysis.explanation} />
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center justify-end pointer-events-none z-0">
+              <img 
+                src="/3d-imgs-assest/fluxid_ai_analysis.png" 
+                alt="AI Analysis" 
+                className="w-[400px] object-contain opacity-10 mix-blend-screen translate-y-8 translate-x-8"
+              />
+            </div>
+            <div className="relative z-10">
+              <ExplanationCard explanation={analysis.explanation} />
+            </div>
+          </div>
           <AssetBreakdown assets={analysis.assets} usd={analysis.usd} />
         </div>
       )}
