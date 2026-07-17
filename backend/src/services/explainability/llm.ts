@@ -54,7 +54,7 @@ function parseAiResponse(raw: string): { insight: string; suggestions: string[] 
 // response isn't parseable. Caller is expected to fall back to the rule-based layer.
 export async function generateLlmExplanation(result: ScoreResult): Promise<Explanation | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey || result.metrics.transactionCount === 0) return null;
 
   const model = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
   const controller = new AbortController();

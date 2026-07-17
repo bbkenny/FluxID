@@ -11,7 +11,7 @@ export function generateRuleBasedExplanation(result: ScoreResult): Explanation {
 
   if (metrics.transactionCount === 0) {
     return {
-      insight: 'No transaction history available for this wallet.',
+      insight: `No transaction history available for this wallet (${result.accountId.slice(0, 6)}...${result.accountId.slice(-4)}).`,
       suggestions: ['Make a few inbound and outbound transactions to build a liquidity profile.'],
       source: 'rule-based',
       generatedAt: new Date().toISOString(),
