@@ -78,14 +78,12 @@ export default function Header() {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       style={{ 
-        background: "var(--card)", 
-        border: "1px solid var(--border)",
-        borderRadius: 40
+        background: "var(--surface)", 
       }}
       className={
         pathname === '/' 
-          ? "fixed top-4 left-0 right-0 mx-auto w-[calc(100%-2rem)] max-w-7xl z-40 h-[4.5rem]" 
-          : "fixed top-4 left-4 right-4 z-40 h-[4.5rem]"
+          ? "card fixed top-4 left-0 right-0 mx-auto w-[calc(100%-2rem)] max-w-7xl z-40 h-[4.5rem]" 
+          : "card fixed top-4 left-4 right-4 z-40 h-[4.5rem]"
       }
     >
       <div className={`h-full mx-auto px-6 flex items-center justify-between ${pathname === '/' ? 'w-full' : 'max-w-[1600px]'}`}>
@@ -141,12 +139,10 @@ export default function Header() {
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   style={{ 
-                    background: isDropdownOpen ? "var(--border)" : "var(--card)", 
-                    border: "1px solid var(--border)",
-                    padding: "6px 12px",
-                    borderRadius: 8
+                    background: isDropdownOpen ? "var(--surface)" : "var(--surface)", 
+                    borderRadius: 16
                   }}
-                  className="flex items-center gap-2 hover:bg-[var(--border)] transition-colors cursor-pointer"
+                  className={`flex items-center gap-2 hover:bg-[var(--surface)] transition-colors cursor-pointer ${isDropdownOpen ? "pressed" : "card"}`}
                 >
                   <Wallet size={14} style={{ color: "var(--primary)" }} />
                   <span style={{ color: "var(--foreground)", fontSize: 13, fontWeight: 600 }}>
@@ -171,16 +167,13 @@ export default function Header() {
                     transition={{ duration: 0.15 }}
                     style={{
                       position: "absolute",
-                      top: "calc(100% + 8px)",
+                      top: "calc(100% + 12px)",
                       right: 0,
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 12,
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
                       width: 220,
                       padding: 16,
                       zIndex: 50
                     }}
+                    className="card"
                   >
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)]">Balances</span>
@@ -224,7 +217,7 @@ export default function Header() {
                       </div>
                     </div>
 
-                    <div className="h-[1px] w-full bg-[var(--border)] my-4"></div>
+                    <div className="h-[1px] w-full bg-[var(--shadow-dark)] opacity-20 my-4"></div>
 
                     <button
                       onClick={() => {
