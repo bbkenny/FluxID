@@ -61,7 +61,7 @@ export default function TransferPage() {
         .build();
 
       const signedTxStr = await signTransaction(transaction.toXDR(), { 
-        network: network === "mainnet" ? "PUBLIC" : "TESTNET" 
+        networkPassphrase: network === "mainnet" ? "PUBLIC" : "TESTNET" 
       });
       
       const signedTx = StellarSdk.TransactionBuilder.fromXDR(
