@@ -55,7 +55,8 @@ export default function AnalyzeBar() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card mb-8 px-4 py-3 flex flex-col md:flex-row items-center gap-4"
+      className="card p-5 mb-6"
+      id="tour-wallet-input"
     >
       <div className="flex gap-3 flex-wrap">
         <input
@@ -71,7 +72,7 @@ export default function AnalyzeBar() {
           className="flex-1 min-w-[260px] px-4 py-3 rounded-xl bg-background border border-white/10 focus:border-primary outline-none text-sm font-mono"
         />
         <div
-          className="pressed flex-1 flex items-center px-4 py-2"
+          className="pressed flex items-center p-1 rounded-xl"
           role="radiogroup"
           aria-label="Network"
         >
