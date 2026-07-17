@@ -15,7 +15,7 @@ const PERSIST_PATH = join(process.cwd(), '.payment-requests.json');
 
 function resolveReceiveAddress(): string {
   if (appConfig.payment.receiveAddress) return appConfig.payment.receiveAddress;
-  const adminSecretRaw = process.env.ADMIN_SECRET_KEY;
+  const adminSecretRaw = process.env.ADMIN_SECRET_KEY || process.env.FLUXID_ADMIN_SECRET_KEY;
   if (adminSecretRaw) {
     const adminSecret = adminSecretRaw.trim().replace(/['"]/g, '');
     try {

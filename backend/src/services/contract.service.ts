@@ -76,7 +76,7 @@ export class ContractService {
     this.networkPassphrase = config.networkPassphrase;
     this.rpcUrl = config.rpcUrl;
     this.contractId = config.contractId;
-    const secretRaw = process.env.ADMIN_SECRET_KEY;
+    const secretRaw = process.env.ADMIN_SECRET_KEY || process.env.FLUXID_ADMIN_SECRET_KEY;
     this.adminSecret = secretRaw ? secretRaw.trim().replace(/['"]/g, '') : undefined;
   }
 
