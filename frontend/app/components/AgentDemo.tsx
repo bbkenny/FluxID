@@ -212,20 +212,25 @@ export default function AgentDemo() {
               style={{ color: "var(--foreground)", fontWeight: 900, fontSize: 56 }}
             />
             <div style={{ color: "var(--foreground-muted)", fontSize: 13, marginTop: 4 }}>
-              {score.risk} risk
+              {score.risk} risk ({truncateAddress(publicKey!)}) · Verified on testnet
               {score.explanation?.insight ? ` · ${score.explanation.insight}` : ""}
             </div>
             {score.payment?.txHash && (
-              <div
+              <a
+                href={`https://stellar.expert/explorer/testnet/tx/${score.payment.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
                 style={{
-                  color: "var(--foreground-dim)",
+                  color: "var(--primary)",
                   fontSize: 11,
                   fontFamily: "monospace",
                   marginTop: 10,
+                  display: "inline-block"
                 }}
               >
                 tx {score.payment.txHash.slice(0, 10)}...{score.payment.txHash.slice(-8)}
-              </div>
+              </a>
             )}
           </motion.div>
         )}
