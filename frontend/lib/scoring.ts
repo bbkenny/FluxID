@@ -8,7 +8,7 @@ const HORIZON_URLS: Record<StellarNetwork, string> = {
 };
 
 function horizonUrlFor(network: StellarNetwork): string {
-  return process.env.NEXT_PUBLIC_HORIZON_URL || HORIZON_URLS[network];
+  return HORIZON_URLS[network];
 }
 
 const AI_BACKEND_URL = process.env.NEXT_PUBLIC_AI_BACKEND_URL || "";
