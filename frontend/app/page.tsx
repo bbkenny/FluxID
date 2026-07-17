@@ -63,14 +63,6 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <section className="relative max-w-7xl mx-auto px-5 pt-16 pb-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[55vh]">
-        {/* Abstract 3D background floating behind everything */}
-        <div className="absolute inset-0 flex items-center justify-end pointer-events-none overflow-hidden z-0">
-          <img 
-            src="/3d-imgs-assest/fluxid_hero_illustration.png" 
-            alt="Hero Background" 
-            className="w-[800px] md:w-[1200px] max-w-none object-contain opacity-20 -rotate-12 blur-[2px]"
-          />
-        </div>
 
         {/* Left copy */}
         <motion.div
