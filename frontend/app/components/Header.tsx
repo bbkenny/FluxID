@@ -91,7 +91,7 @@ export default function Header() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
             <Image 
-              src="/fluxID-logo.png" 
+              src="/header_assets/fluxID-logo.png" 
               alt="FluxID" 
               width={52} 
               height={52}

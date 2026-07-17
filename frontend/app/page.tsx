@@ -135,7 +135,7 @@ export default function Home() {
             style={{ position: "relative" }}
           >
             <Image
-              src="/hero-hook.png"
+              src="/landing_page_assets/hero-hook.png"
               alt="FluxID"
               width={500}
               height={500}
@@ -281,7 +281,7 @@ export default function Home() {
         
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-6 border-t border-[var(--shadow-light)] opacity-80">
           <div className="flex items-center gap-2">
-            <Image src="/fluxID-logo.png" alt="FluxID" width={36} height={36} />
+            <Image src="/header_assets/fluxID-logo.png" alt="FluxID" width={36} height={36} />
             <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: "0.04em" }}>
               <span style={{ color: "#8FA828" }}>Flux</span>
               <span style={{ color: "var(--foreground)" }}>ID</span>

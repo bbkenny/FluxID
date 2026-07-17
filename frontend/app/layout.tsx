@@ -18,18 +18,18 @@ export const metadata: Metadata = {
     title: "FluxID — Liquidity Identity Layer",
     description: "Turn any wallet into a real-time financial identity on Stellar.",
     siteName: "FluxID",
-    images: [{ url: "/logo.svg", width: 44, height: 44, alt: "FluxID Logo" }],
+    images: [{ url: "/header_assets/logo.svg", width: 44, height: 44, alt: "FluxID Logo" }],
   },
   twitter: {
     card: "summary",
     title: "FluxID",
     description: "Liquidity Identity Layer on Stellar",
-    images: ["/logo.svg"],
+    images: ["/header_assets/logo.svg"],
   },
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-    apple: "/logo.svg",
+    icon: "/metadata_assets/favicon.svg",
+    shortcut: "/metadata_assets/favicon.svg",
+    apple: "/header_assets/logo.svg",
   },
   robots: { index: true, follow: true },
 };

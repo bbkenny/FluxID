@@ -20,35 +20,35 @@ const steps: TourStep[] = [
     content:
       "FluxID turns any Stellar wallet into a real-time financial identity. Use the 'Show me around' button to get started.",
     layout: "welcome",
-    imageUrl: "/nav-dashboardUI.png",
+    imageUrl: "/onboarding-assets/nav-dashboardUI.png",
   },
   {
     selector: "#tour-wallet-input",
     title: "Wallet Input",
     content:
       "Enter any Stellar wallet address to analyze. No permissions needed, scoring uses public on-chain data.",
-    imageUrl: "/nav-walletinput.png",
+    imageUrl: "/onboarding-assets/nav-walletinput.png",
   },
   {
     selector: "#tour-score-display",
     title: "Liquidity Score",
     content:
       "Every wallet gets a score from 0–100 based on income consistency, spending patterns, and activity level.",
-    imageUrl: "/nav-scoredisplay.png",
+    imageUrl: "/onboarding-assets/nav-scoredisplay.png",
   },
   {
     selector: "#tour-risk-indicator",
     title: "Risk Assessment",
     content:
       "Quickly understand risk levels at a glance; Low, Medium, or High, to make informed decisions.",
-    imageUrl: "/nav-riskindicator.png",
+    imageUrl: "/onboarding-assets/nav-riskindicator.png",
   },
   {
     selector: "#tour-recent-flow",
     title: "Flow Analytics",
     content:
       "Visualize money movement with clear inflow vs outflow charts to spot patterns instantly.",
-    imageUrl: "/nav-recentflow.png",
+    imageUrl: "/onboarding-assets/nav-recentflow.png",
   },
 ];
 
