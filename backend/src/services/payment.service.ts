@@ -15,12 +15,13 @@ const PERSIST_PATH = join(process.cwd(), '.payment-requests.json');
 
 function resolveReceiveAddress(): string {
   if (appConfig.payment.receiveAddress) return appConfig.payment.receiveAddress;
-  const adminSecret = process.env.ADMIN_SECRET_KEY;
-  if (adminSecret) {
+  const adminSecretRaw = process.env.ADMIN_SECRET_KEY;
+  if (adminSecretRaw) {
+    const adminSecret = adminSecretRaw.trim().replace(/['"]/g, '');
     try {
       return Keypair.fromSecret(adminSecret).publicKey();
     } catch (err) {
-      logger.warn({ err: (err as Error).message }, 'ADMIN_SECRET_KEY invalid; cannot derive receive address');
+      logger.warn({ err: (err as Error).message, adminSecretRaw }, 'ADMIN_SECRET_KEY invalid; cannot derive receive address');
     }
   }
   return '';
