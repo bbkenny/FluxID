@@ -172,16 +172,16 @@ FluxID is infrastructure for:
 
 ## Screenshots
 
-## 🟡 Level 2 - Yellow Belt Submission
+## Level 2 - Yellow Belt Submission
 
 - **Live demo link:** [https://fluxid.vercel.app/](https://fluxid.vercel.app/)
 - **Deployed contract address:** `CAWYZOLKSRRBT42Z6WXZNVNQE7MDJTTGDQEYKADPAJWGVFDK4MIO3KE5`
 - **Transaction hash of a contract call:** [0ec7093bab1c0c34232901040f6d447ab1b27f30391b023a85a559bba2aaef82](https://stellar.expert/explorer/testnet/tx/0ec7093bab1c0c34232901040f6d447ab1b27f30391b023a85a559bba2aaef82)
 
 ### Added Features
-✅ Replaced hardcoded wallet logic with `@creit.tech/stellar-wallets-kit` for Multi-Wallet Integration (Freighter, Albedo, xBull).
-✅ Implemented strict UI Error Handling (Missing wallet extensions, user rejections, and insufficient OP_UNDERFUNDED balances).
-✅ Added a frontend `/dashboard/contract` UI to demonstrate executing reads and writes directly to the Soroban smart contract via RPC.
+- Replaced hardcoded wallet logic with `@creit.tech/stellar-wallets-kit` for Multi-Wallet Integration (Freighter, Albedo, xBull).
+- Implemented strict UI Error Handling (Missing wallet extensions, user rejections, and insufficient OP_UNDERFUNDED balances).
+- Added a frontend `/dashboard/contract` UI to demonstrate executing reads and writes directly to the Soroban smart contract via RPC.
 
 ### 5. Wallet Options (Level 2)
 ![Wallet Options](docs/screenshots/Wallet-Options.png)
