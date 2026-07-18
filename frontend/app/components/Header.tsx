@@ -12,7 +12,7 @@ import { usePathname } from "next/navigation";
 export default function Header() {
   const pathname = usePathname();
   const { publicKey: address, isConnected, isLoading, connect, disconnect } = useFreighter();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   
   // Dropdown state
@@ -126,11 +126,11 @@ export default function Header() {
             {/* Theme Toggle */}
             {mounted && (
               <button 
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
                 style={{ color: "var(--foreground-muted)" }}
                 className="hidden sm:flex p-2 rounded-lg hover:bg-[var(--border)] transition-colors"
               >
-                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
               </button>
             )}
 
@@ -241,12 +241,12 @@ export default function Header() {
                       </button>
                       {mounted && (
                         <button 
-                          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
                           style={{ color: "var(--foreground-muted)" }}
                           className="p-2 rounded-lg hover:bg-[var(--surface)] transition-colors flex items-center gap-2"
                         >
-                          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />} 
-                          <span className="text-xs font-semibold">{theme === "dark" ? "Light" : "Dark"}</span>
+                          {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />} 
+                          <span className="text-xs font-semibold">{resolvedTheme === "dark" ? "Light" : "Dark"}</span>
                         </button>
                       )}
                     </div>
