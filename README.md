@@ -186,7 +186,9 @@ FluxID is infrastructure for:
 ### 5. Wallet Options (Level 2)
 ![Wallet Options](docs/screenshots/Wallet-Options.png)
 
-These screenshots demonstrate the core functionality required for the Level 1 evaluation on Testnet:
+---
+
+## These screenshots demonstrate the core functionality required for the Level 1 evaluation on Testnet:
 
 ### 1. Wallet Connected
 ![Wallet Connected](docs/screenshots/wallet_connected.png)
