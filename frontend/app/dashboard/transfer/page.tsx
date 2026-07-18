@@ -5,12 +5,13 @@ import { motion } from "framer-motion";
 import { Send, Wallet, AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
 import { useAnalysis } from "../context/AnalysisContext";
 import { useFreighter } from "../../context/FreighterContext";
+import { useToast } from "../../components/Toast";
 import * as StellarSdk from "@stellar/stellar-sdk";
-import { signTransaction } from "@stellar/freighter-api";
 
 export default function TransferPage() {
   const { analysis, analyzedAddress } = useAnalysis();
-  const { isConnected, publicKey: connectedAddress, connect } = useFreighter();
+  const { isConnected, publicKey: connectedAddress, connect, getKit } = useFreighter();
+  const { showToast } = useToast();
   
   const [destination, setDestination] = useState("");
   const [amount, setAmount] = useState("");
@@ -32,7 +33,9 @@ export default function TransferPage() {
     }
     if (!destination || !amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       setStatus("error");
-      setErrorMessage("Please enter a valid destination address and amount.");
+      const msg = "Please enter a valid destination address and amount.";
+      setErrorMessage(msg);
+      showToast(msg, "error");
       return;
     }
 
@@ -60,14 +63,18 @@ export default function TransferPage() {
         .setTimeout(60)
         .build();
 
-      const signResult = await signTransaction(transaction.toXDR(), { 
-        networkPassphrase: network === "mainnet" ? "PUBLIC" : "TESTNET" 
+      const kit = getKit();
+      const signResult = await kit.signTransaction(transaction.toXDR(), {
+        address: connectedAddress,
+        networkPassphrase: network === "mainnet" ? StellarSdk.Networks.PUBLIC : StellarSdk.Networks.TESTNET
       });
 
-      const xdrStr = typeof signResult === "string" ? signResult : (signResult as any).signedTxXdr;
-      
+      if (!signResult || !signResult.signedTxXdr) {
+        throw new Error("Transaction signing was rejected or failed.");
+      }
+
       const signedTx = StellarSdk.TransactionBuilder.fromXDR(
-        xdrStr, 
+        signResult.signedTxXdr, 
         network === "mainnet" ? StellarSdk.Networks.PUBLIC : StellarSdk.Networks.TESTNET
       );
       
@@ -77,10 +84,20 @@ export default function TransferPage() {
       setStatus("success");
       setTxHash(response.hash);
       setAmount("");
+      showToast("Transaction successful!", "success");
     } catch (err: any) {
       console.error(err);
       setStatus("error");
-      setErrorMessage(err.message || "Failed to submit transaction.");
+      let errMsg = err.message || "Failed to submit transaction.";
+      
+      if (errMsg.toLowerCase().includes("underfunded") || errMsg.toLowerCase().includes("insufficient balance") || errMsg.toLowerCase().includes("op_underfunded")) {
+        errMsg = "Insufficient balance to execute this transaction.";
+      } else if (errMsg.toLowerCase().includes("reject") || errMsg.toLowerCase().includes("cancel")) {
+        errMsg = "Transaction was rejected by user.";
+      }
+      
+      setErrorMessage(errMsg);
+      showToast(errMsg, "error");
     }
   };
 

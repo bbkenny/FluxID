@@ -98,6 +98,7 @@ export async function requestPaidScore(
 }
 
 export async function signAndSubmitChallenge(
+  kit: any, // We type as any or StellarWalletsKit.
   sourcePublicKey: string,
   challenge: PaymentChallenge
 ): Promise<{ txHash: string }> {
@@ -119,14 +120,14 @@ export async function signAndSubmitChallenge(
     .setTimeout(180)
     .build();
 
-  const signed = await signTransaction(tx.toXDR(), {
-    networkPassphrase: NETWORK_PASSPHRASE,
+  // Use the StellarWalletsKit to sign
+  const signed = await kit.signTransaction(tx.toXDR(), {
     address: sourcePublicKey,
+    networkPassphrase: NETWORK_PASSPHRASE
   });
-  if (signed.error) {
-    throw new Error(
-      typeof signed.error === "string" ? signed.error : JSON.stringify(signed.error)
-    );
+  
+  if (!signed || !signed.signedTxXdr) {
+    throw new Error("Transaction signing was rejected or failed.");
   }
 
   const signedTx = TransactionBuilder.fromXDR(signed.signedTxXdr, NETWORK_PASSPHRASE);

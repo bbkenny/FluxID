@@ -19,7 +19,7 @@ import {
 type Phase = "idle" | "requesting" | "awaitingPayment" | "signing" | "submitting" | "verifying" | "done" | "error";
 
 export default function AgentDemo() {
-  const { publicKey, isConnected, connect } = useFreighter();
+  const { publicKey, isConnected, connect, getKit } = useFreighter();
   const [steps, setSteps] = useState<AgentStep[]>(INITIAL_AGENT_STEPS);
   const [phase, setPhase] = useState<Phase>("idle");
   const [challenge, setChallenge] = useState<PaymentChallenge | null>(null);
@@ -106,9 +106,11 @@ export default function AgentDemo() {
 
     try {
       updateStep("challenge", { status: "done" });
-      updateStep("sign", { status: "active", detail: "Waiting for Freighter approval..." });
+      updateStep("sign", { status: "active", detail: "Waiting for wallet approval..." });
       setPhase("signing");
-      const { txHash } = await signAndSubmitChallenge(publicKey, challenge);
+      
+      const kit = getKit();
+      const { txHash } = await signAndSubmitChallenge(kit, publicKey, challenge);
 
       updateStep("sign", { status: "done" });
       updateStep("submit", {

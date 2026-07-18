@@ -48,11 +48,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           suppression those extensions trigger a spurious hydration mismatch. */}
       <body className="antialiased" suppressHydrationWarning>
         <Providers>
-          <FreighterProvider>
-            <ToastProvider>
+          <ToastProvider>
+            <FreighterProvider>
               <ClientLayout>{children}</ClientLayout>
-            </ToastProvider>
-          </FreighterProvider>
+            </FreighterProvider>
+          </ToastProvider>
         </Providers>
       </body>
     </html>

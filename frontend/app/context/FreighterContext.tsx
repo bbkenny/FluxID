@@ -8,15 +8,36 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { useToast } from "../components/Toast";
 
 import {
-  isConnected as freighterIsConnected,
-  isAllowed,
-  requestAccess,
-  getAddress,
-} from "@stellar/freighter-api";
+  StellarWalletsKit,
+  Networks,
+} from "@creit.tech/stellar-wallets-kit";
 
-interface FreighterState {
+import { FreighterModule } from "@creit.tech/stellar-wallets-kit/modules/freighter";
+import { AlbedoModule } from "@creit.tech/stellar-wallets-kit/modules/albedo";
+import { xBullModule } from "@creit.tech/stellar-wallets-kit/modules/xbull";
+
+// Initialize kit once outside component so it persists
+let isKitInitialized = false;
+function initKit() {
+  if (typeof window === "undefined") return;
+  if (!isKitInitialized) {
+    StellarWalletsKit.init({
+      network: Networks.TESTNET,
+      selectedWalletId: "freighter",
+      modules: [
+        new FreighterModule(),
+        new AlbedoModule(),
+        new xBullModule()
+      ],
+    });
+    isKitInitialized = true;
+  }
+}
+
+interface WalletState {
   isInstalled: boolean;
   isConnected: boolean;
   publicKey: string | null;
@@ -24,152 +45,70 @@ interface FreighterState {
   error: string | null;
 }
 
-interface FreighterContextValue extends FreighterState {
+interface WalletContextValue extends WalletState {
   connect: () => Promise<void>;
   disconnect: () => void;
+  getKit: () => typeof StellarWalletsKit;
 }
 
-const initialState: FreighterState = {
-  isInstalled: false,
+const initialState: WalletState = {
+  isInstalled: true, 
   isConnected: false,
   publicKey: null,
-  isLoading: true,
+  isLoading: false,
   error: null,
 };
 
-const FreighterContext = createContext<FreighterContextValue | undefined>(
-  undefined
-);
-
-function errorMessage(err: unknown, fallback: string): string {
-  if (!err) return fallback;
-  if (typeof err === "string") return err;
-  if (err instanceof Error) return err.message;
-  if (typeof err === "object" && err !== null && "message" in err) {
-    return String((err as { message: unknown }).message);
-  }
-  return fallback;
-}
+const WalletContext = createContext<WalletContextValue | undefined>(undefined);
 
 export function FreighterProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<FreighterState>(initialState);
-
-  const checkConnection = useCallback(async () => {
-    try {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      const connectedResult = await freighterIsConnected();
-      if (connectedResult.error || !connectedResult.isConnected) {
-        setState({
-          isInstalled: false,
-          isConnected: false,
-          publicKey: null,
-          isLoading: false,
-          error: null,
-        });
-        return;
-      }
-
-      const allowedResult = await isAllowed();
-      if (allowedResult.error || !allowedResult.isAllowed) {
-        setState({
-          isInstalled: true,
-          isConnected: false,
-          publicKey: null,
-          isLoading: false,
-          error: null,
-        });
-        return;
-      }
-
-      const addressResult = await getAddress();
-      if (addressResult.error || !addressResult.address) {
-        setState({
-          isInstalled: true,
-          isConnected: false,
-          publicKey: null,
-          isLoading: false,
-          error: null,
-        });
-        return;
-      }
-
-      setState({
-        isInstalled: true,
-        isConnected: true,
-        publicKey: addressResult.address,
-        isLoading: false,
-        error: null,
-      });
-    } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage(err, "Unknown error while checking wallet"),
-      }));
-    }
-  }, []);
+  const [state, setState] = useState<WalletState>(initialState);
+  const { showToast } = useToast();
 
   useEffect(() => {
-    checkConnection();
-  }, [checkConnection]);
+    initKit();
+  }, []);
 
   const connect = useCallback(async () => {
     try {
+      initKit();
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      const connectedResult = await freighterIsConnected();
-      if (connectedResult.error || !connectedResult.isConnected) {
-        setState((prev) => ({
-          ...prev,
-          isInstalled: false,
-          isLoading: false,
-          error: "Freighter extension not found. Install it from freighter.app and refresh.",
-        }));
-        return;
-      }
-
-      const accessResult = await requestAccess();
-      if (accessResult.error) {
-        const msg = errorMessage(accessResult.error, "Failed to connect");
-        setState((prev) => ({
-          ...prev,
-          isInstalled: true,
-          isLoading: false,
-          error: msg.toLowerCase().includes("declined") || msg.toLowerCase().includes("denied")
-            ? "Connection rejected in Freighter."
-            : msg,
-        }));
-        return;
-      }
-
-      if (!accessResult.address) {
-        setState((prev) => ({
-          ...prev,
-          isInstalled: true,
-          isLoading: false,
-          error: "Could not retrieve wallet address from Freighter.",
-        }));
-        return;
-      }
-
+      const { address } = await StellarWalletsKit.authModal();
+      
       setState({
         isInstalled: true,
         isConnected: true,
-        publicKey: accessResult.address,
+        publicKey: address,
         isLoading: false,
         error: null,
       });
-    } catch (err) {
+      showToast(`Connected to wallet`, "success");
+    } catch (err: any) {
+      console.error("Wallet selection error:", err);
+      let errMsg = err.message || "Failed to connect to wallet.";
+      
+      if (errMsg.toLowerCase().includes("reject") || errMsg.toLowerCase().includes("decline") || errMsg.toLowerCase().includes("cancel")) {
+        errMsg = "Wallet connection rejected by user.";
+      } else if (errMsg.toLowerCase().includes("not found") || errMsg.toLowerCase().includes("not installed")) {
+        errMsg = `Wallet is not installed or not found.`;
+      }
+      
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: errorMessage(err, "Failed to connect"),
+        error: errMsg,
       }));
+      showToast(errMsg, "error");
     }
-  }, []);
+  }, [showToast]);
 
-  const disconnect = useCallback(() => {
+  const disconnect = useCallback(async () => {
+    try {
+      await StellarWalletsKit.disconnect();
+    } catch (e) {
+      // ignore
+    }
     setState({
       isInstalled: true,
       isConnected: false,
@@ -177,17 +116,24 @@ export function FreighterProvider({ children }: { children: ReactNode }) {
       isLoading: false,
       error: null,
     });
+    showToast("Wallet disconnected", "success");
+  }, [showToast]);
+
+  const getKit = useCallback(() => {
+    initKit();
+    return StellarWalletsKit;
   }, []);
 
   return (
-    <FreighterContext.Provider value={{ ...state, connect, disconnect }}>
+    <WalletContext.Provider value={{ ...state, connect, disconnect, getKit }}>
       {children}
-    </FreighterContext.Provider>
+    </WalletContext.Provider>
   );
 }
 
-export function useFreighter(): FreighterContextValue {
-  const context = useContext(FreighterContext);
+// Keep the useFreighter name so we don't have to refactor everything
+export function useFreighter(): WalletContextValue {
+  const context = useContext(WalletContext);
   if (context === undefined) {
     throw new Error("useFreighter must be used within a <FreighterProvider>");
   }

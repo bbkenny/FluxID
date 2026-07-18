@@ -42,6 +42,7 @@ const navSections = [
     items: [
       { href: "/dashboard/protocol", label: "Overview", icon: Activity },
       { href: "/dashboard/agent", label: "Agent Gateway", icon: Bot },
+      { href: "/dashboard/contract", label: "Contract Interface", icon: Settings },
     ],
   },
   {
