@@ -5,13 +5,10 @@ use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Symbol, Ve
 pub enum DataKey {
     Admin,
     Network,
+    OracleRegistryId,
     Score(Address),
     LastUpdated(Address),
     RiskLevel(Address),
-    // Fix 1: store a hash of the scoring inputs alongside each score so any
-    // third party can independently re-run the scoring algorithm against the
-    // same Horizon data and verify the result matches on-chain — no trust in
-    // the admin key required.
     ScoreInputHash(Address),
 }
 
@@ -53,32 +50,46 @@ impl LiquidityIdentity {
         env.storage().instance().set(&DataKey::Network, &network);
     }
 
-    /// Store a score on-chain.
-    ///
-    /// score_input_hash: 32-byte SHA-256 digest of the canonical input string:
-    ///   "{wallet}:{tx_count}:{inflow_volume}:{outflow_volume}:{xlm_price_usd}"
-    ///
-    /// Anyone who has access to the wallet's Horizon history can re-derive the
-    /// same hash and verify the score was not tampered with between computation
-    /// and storage — this removes the need to trust the admin key for reads.
-    pub fn set_score(
-        env: Env,
-        admin: Address,
-        wallet: Address,
-        score: u32,
-        risk: RiskLevel,
-        score_input_hash: BytesN<32>,
-    ) {
+    /// Set the Oracle Registry Contract ID
+    pub fn set_oracle_registry(env: Env, admin: Address, registry_id: Address) {
         admin.require_auth();
-
         let stored_admin: Address = env
             .storage()
             .instance()
             .get(&DataKey::Admin)
             .unwrap_or_else(|| panic!("Admin not set"));
-
         if admin != stored_admin {
-            panic!("Unauthorized: only admin can set scores");
+            panic!("Unauthorized");
+        }
+        env.storage().instance().set(&DataKey::OracleRegistryId, &registry_id);
+    }
+
+    /// Store a score on-chain. Requires authorization from the OracleRegistry.
+    pub fn set_score(
+        env: Env,
+        caller: Address,
+        wallet: Address,
+        score: u32,
+        risk: RiskLevel,
+        score_input_hash: BytesN<32>,
+    ) {
+        caller.require_auth();
+
+        // Cross-contract call to OracleRegistry to check authorization
+        let registry_id: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::OracleRegistryId)
+            .unwrap_or_else(|| panic!("OracleRegistry not configured"));
+
+        let is_authorized: bool = env.invoke_contract(
+            &registry_id,
+            &soroban_sdk::Symbol::new(&env, "is_oracle_authorized"),
+            soroban_sdk::vec![&env, caller.to_val()],
+        );
+
+        if !is_authorized {
+            panic!("Unauthorized: caller is not an authorized oracle");
         }
 
         if score > 100 {

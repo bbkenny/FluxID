@@ -3,6 +3,7 @@ resolver = "2"
 
 members = [
     "contracts/liquidity_identity",
+    "contracts/oracle_registry",
 ]
 
 [workspace.dependencies]

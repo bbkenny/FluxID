@@ -7,10 +7,30 @@ fn dummy_hash(env: &Env, seed: u8) -> BytesN<32> {
     BytesN::from_array(env, &[seed; 32])
 }
 
+#[contract]
+pub struct MockOracleRegistry;
+
+#[contractimpl]
+impl MockOracleRegistry {
+    pub fn is_oracle_authorized(_env: Env, _oracle: Address) -> bool {
+        true
+    }
+}
+
 fn setup() -> (Env, Address, Address) {
     let env = Env::default();
     let admin = Address::generate(&env);
     let contract_id = env.register(LiquidityIdentity, ());
+    
+    // Register mock oracle registry
+    let registry_id = env.register(MockOracleRegistry, ());
+    
+    // Initialize the main contract
+    let client = LiquidityIdentityClient::new(&env, &contract_id);
+    env.mock_all_auths();
+    client.init(&admin, &symbol_short!("testnet"));
+    client.set_oracle_registry(&admin, &registry_id);
+    
     (env, admin, contract_id)
 }
 
@@ -18,9 +38,6 @@ fn setup() -> (Env, Address, Address) {
 fn test_constructor() {
     let (env, admin, contract_id) = setup();
     env.mock_all_auths();
-
-    let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     env.as_contract(&contract_id, || {
         let stored_admin: Address = env.storage().instance().get(&DataKey::Admin).unwrap();
@@ -37,7 +54,6 @@ fn test_set_and_get_score() {
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet = Address::generate(&env);
     let hash = dummy_hash(&env, 0xab);
@@ -52,11 +68,10 @@ fn test_set_and_get_score() {
 
 #[test]
 fn test_get_nonexistent_score() {
-    let (env, admin, contract_id) = setup();
+    let (env, _admin, contract_id) = setup();
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet = Address::generate(&env);
     let score = client.get_score(&wallet);
@@ -72,7 +87,6 @@ fn test_risk_level_mapping() {
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet1 = Address::generate(&env);
     let wallet2 = Address::generate(&env);
@@ -93,7 +107,6 @@ fn test_transfer_admin() {
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet = Address::generate(&env);
     client.set_score(&admin, &wallet, &70, &RiskLevel::Low, &dummy_hash(&env, 0x70));
@@ -111,7 +124,6 @@ fn test_multiple_wallets() {
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet1 = Address::generate(&env);
     let wallet2 = Address::generate(&env);
@@ -132,7 +144,6 @@ fn test_last_updated_timestamp() {
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet = Address::generate(&env);
     client.set_score(&admin, &wallet, &75, &RiskLevel::Low, &dummy_hash(&env, 0x75));
@@ -143,11 +154,10 @@ fn test_last_updated_timestamp() {
 
 #[test]
 fn test_network_identifier() {
-    let (env, admin, contract_id) = setup();
+    let (env, _admin, contract_id) = setup();
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let stored_network = client.get_network();
     assert_eq!(stored_network, symbol_short!("testnet"));
@@ -159,7 +169,6 @@ fn test_get_wallet_info() {
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet = Address::generate(&env);
     client.set_score(&admin, &wallet, &82, &RiskLevel::Low, &dummy_hash(&env, 0x82));
@@ -174,11 +183,10 @@ fn test_get_wallet_info() {
 
 #[test]
 fn test_get_wallet_info_nonexistent() {
-    let (env, admin, contract_id) = setup();
+    let (env, _admin, contract_id) = setup();
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet = Address::generate(&env);
     let info = client.get_wallet_info(&wallet);
@@ -191,7 +199,6 @@ fn test_get_verifiable_info() {
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet = Address::generate(&env);
     let hash = dummy_hash(&env, 0xde);
@@ -210,11 +217,10 @@ fn test_get_verifiable_info() {
 
 #[test]
 fn test_get_verifiable_info_nonexistent() {
-    let (env, admin, contract_id) = setup();
+    let (env, _admin, contract_id) = setup();
     env.mock_all_auths();
 
     let client = LiquidityIdentityClient::new(&env, &contract_id);
-    client.init(&admin, &symbol_short!("testnet"));
 
     let wallet = Address::generate(&env);
     let record = client.get_verifiable_info(&wallet);
