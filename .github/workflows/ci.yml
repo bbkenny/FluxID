@@ -16,7 +16,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.81.0
+          toolchain: stable
           targets: wasm32v1-none
 
       - name: Cache dependencies
