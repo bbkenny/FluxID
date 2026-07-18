@@ -62,7 +62,7 @@ export default function Home() {
     <div className="min-h-screen overflow-x-hidden">
 
       {/* ── Hero ── */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 pb-12 md:pb-20 grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center min-h-[100dvh]">
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-20 pb-12 grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center min-h-[100dvh]">
         {/* Abstract 3D background floating behind everything */}
         <div className="absolute inset-0 flex items-center justify-end pointer-events-none overflow-hidden z-0">
           <img 
