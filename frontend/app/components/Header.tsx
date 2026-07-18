@@ -86,17 +86,18 @@ export default function Header() {
           : "card fixed top-4 left-4 right-4 z-40 h-[4.5rem]"
       }
     >
-      <div className={`h-full mx-auto px-6 flex items-center justify-between ${pathname === '/' ? 'w-full' : 'max-w-[1600px]'}`}>
+      <div className={`h-full mx-auto px-4 sm:px-6 flex items-center justify-between ${pathname === '/' ? 'w-full' : 'max-w-[1600px]'}`}>
         {/* Left: Logo */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4 sm:gap-8">
           <Link href="/" className="flex items-center gap-2">
             <Image 
               src="/header_assets/fluxID-logo.png" 
               alt="FluxID" 
-              width={52} 
-              height={52}
+              width={42} 
+              height={42}
+              className="sm:w-[52px] sm:h-[52px]"
             />
-            <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: "0.04em" }}>
+            <span className="hidden sm:inline-block" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "0.04em" }}>
               <span style={{ color: "#8FA828" }}>Flux</span>
               <span style={{ color: "var(--foreground)" }}>ID</span>
             </span>

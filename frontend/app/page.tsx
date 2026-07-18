@@ -62,7 +62,7 @@ export default function Home() {
     <div className="min-h-screen overflow-x-hidden">
 
       {/* ── Hero ── */}
-      <section className="relative max-w-7xl mx-auto px-5 pt-16 pb-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[55vh]">
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 pb-12 md:pb-20 grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center min-h-[calc(100vh-6rem)]">
         {/* Abstract 3D background floating behind everything */}
         <div className="absolute inset-0 flex items-center justify-end pointer-events-none overflow-hidden z-0">
           <img 
@@ -84,7 +84,7 @@ export default function Home() {
           <motion.h1
             variants={item}
             style={{ letterSpacing: "-0.04em", lineHeight: 1.0, color: "var(--foreground)" }}
-            className="text-7xl sm:text-8xl font-black mb-4"
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6"
           >
             Liquidity<br />
             <span style={{ color: "var(--primary)" }}>Identity</span><br />
@@ -95,7 +95,7 @@ export default function Home() {
           <motion.p
             variants={item}
             style={{ color: "var(--foreground-muted)", lineHeight: 1.65 }}
-            className="text-xl mb-5 max-w-lg"
+            className="text-lg sm:text-xl mb-8 max-w-lg"
           >
             FluxID turns any Stellar wallet into a real-time financial identity.
             Understand how money behaves, not just how much it holds.
@@ -104,12 +104,12 @@ export default function Home() {
           
 
           {/* CTA */}
-          <motion.div variants={item} className="flex flex-wrap gap-3">
-            <Link href="/dashboard" className="btn btn-primary text-sm flex items-center gap-2">
-              Analyze a Wallet <Zap size={13} />
+          <motion.div variants={item} className="flex flex-col sm:flex-row flex-wrap gap-4">
+            <Link href="/dashboard" className="btn btn-primary text-sm flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3">
+              Analyze a Wallet <Zap size={14} />
             </Link>
-            <Link href="#how-it-works" className="btn btn-outline text-sm flex items-center gap-2">
-              How it Works <ArrowRight size={13} />
+            <Link href="#how-it-works" className="btn btn-outline text-sm flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3">
+              How it Works <ArrowRight size={14} />
             </Link>
           </motion.div>
         </motion.div>
@@ -164,7 +164,7 @@ export default function Home() {
       </section>
 
       {/* ── Stats strip ── */}
-      <section className="px-6 md:px-16 py-6">
+      <section className="px-4 sm:px-6 lg:px-8 py-6">
         <div
           className="card max-w-5xl mx-auto px-10 py-5 flex flex-col sm:flex-row items-stretch sm:items-center divide-y sm:divide-y-0 sm:divide-x"
           style={{ "--tw-divide-color": "var(--shadow-dark)" } as React.CSSProperties}
@@ -176,7 +176,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.4 }}
-              className="flex items-center gap-3 flex-1 px-6 py-3 sm:py-0 first:pl-0 last:pr-0"
+              className="flex items-center gap-3 flex-1 px-4 sm:px-6 py-4 sm:py-0 first:pl-0 last:pr-0"
             >
               <div
                 style={{ background: `color-mix(in srgb, ${accent} 12%, transparent)`, borderRadius: 10 }}
@@ -198,7 +198,7 @@ export default function Home() {
       </section>
 
       {/* ── Features ── */}
-      <section id="how-it-works" className="relative max-w-7xl mx-auto px-5 py-28">
+      <section id="how-it-works" className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
         <div className="absolute inset-0 flex items-center justify-start pointer-events-none overflow-hidden z-0">
           <img 
             src="/3d-imgs-assest/fluxid_liquidity_flow.png" 
@@ -214,8 +214,8 @@ export default function Home() {
           transition={{ duration: 0.55 }}
           className="mb-14"
         >
-          <span className="label block mb-3">How it works</span>
-          <h2 style={{ color: "var(--foreground)", letterSpacing: "-0.03em" }} className="text-4xl font-black">
+          <span className="label block mb-3 text-sm md:text-base">How it works</span>
+          <h2 style={{ color: "var(--foreground)", letterSpacing: "-0.03em" }} className="text-3xl md:text-4xl font-black">
             Three layers.<br />One identity.
           </h2>
         </motion.div>
@@ -277,7 +277,7 @@ export default function Home() {
 
       {/* ── Footer ── */}
       <footer
-        className="relative py-8 px-5 card mt-12 mb-4 mx-4 rounded-3xl overflow-hidden"
+        className="relative py-10 px-6 sm:px-10 card mt-16 mb-4 mx-4 sm:mx-8 rounded-3xl overflow-hidden"
       >
         <div className="absolute inset-0 flex items-end justify-end pointer-events-none z-0">
           <img 
@@ -289,14 +289,14 @@ export default function Home() {
         <div className="max-w-2xl mx-auto text-center mb-6">
           <h2
             style={{ color: "var(--foreground)", letterSpacing: "-0.04em" }}
-            className="text-2xl font-black mb-2"
+            className="text-2xl md:text-3xl font-black mb-3"
           >
             Start analyzing wallets today.
           </h2>
-          <p style={{ color: "var(--foreground-muted)" }} className="text-sm mb-4">
+          <p style={{ color: "var(--foreground-muted)" }} className="text-sm md:text-base mb-6">
             Seriously, just paste an address and see what comes out.
           </p>
-          <Link href="/dashboard" className="btn btn-primary text-sm inline-flex items-center gap-2">
+          <Link href="/dashboard" className="btn btn-primary w-full sm:w-auto text-sm inline-flex justify-center items-center gap-2 px-8 py-3">
             <Zap size={14} /> Launch App
           </Link>
         </div>
