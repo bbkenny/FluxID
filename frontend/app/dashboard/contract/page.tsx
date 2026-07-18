@@ -6,7 +6,7 @@ import { useFreighter } from "../../context/FreighterContext";
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { Shield, BookOpen, Send, AlertTriangle } from "lucide-react";
 
-const DEFAULT_CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID || "CAWYZOLKSRRBT42Z6WXZNVNQE7MDJTTGDQEYKADPAJWGVFDK4MIO3KE5";
+const DEFAULT_CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID || "CAUICITFNLDMHPXARAXARFBS3JKRGZZP5CE7B4DTLFBCJB5F4U24CKBP";
 
 export default function ContractPage() {
   const { isConnected, publicKey, connect, getKit } = useFreighter();
