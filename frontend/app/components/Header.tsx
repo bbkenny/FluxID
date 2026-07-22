@@ -155,8 +155,9 @@ export default function Header() {
                 onClick={() =>
                   setTheme(resolvedTheme === "dark" ? "light" : "dark")
                 }
+                aria-label="Toggle theme"
                 style={{ color: "var(--foreground-muted)" }}
-                className="hidden sm:flex p-2 rounded-lg hover:bg-border transition-colors"
+                className="flex p-2 rounded-lg hover:bg-border transition-colors"
               >
                 {resolvedTheme === "dark" ? (
                   <Sun size={18} />
