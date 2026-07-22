@@ -118,7 +118,7 @@ export default function Header() {
               alt="FluxID"
               width={34}
               height={42}
-              className="sm:w-10 sm:h-10"
+              className="sm:w-10 sm:h-[46px]"
             />
             <span
               className="hidden sm:inline-block"
