@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useFreighter } from "../../context/FreighterContext";
 import { ADMIN_ADDRESS } from "../../../lib/constants";
+import { readContract } from "../../../lib/contractRead";
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { Shield, BookOpen, Send, AlertTriangle } from "lucide-react";
 
@@ -33,42 +34,22 @@ export default function ContractPage() {
       setReadStatus("loading");
       setReadResult(null);
 
-      const server = new StellarSdk.rpc.Server("https://soroban-testnet.stellar.org");
-      const contract = new StellarSdk.Contract(contractId);
+      const scoreVal = await readContract(
+        contractId,
+        "get_score",
+        StellarSdk.nativeToScVal(readWallet, { type: "address" })
+      );
 
-      // Simulation-only source account. Reads don't submit or pay, so this
-      // just needs to be a valid, real key — the deployer address works.
-      const source = new StellarSdk.Account(ADMIN_ADDRESS, "0");
-
-      const tx = new StellarSdk.TransactionBuilder(source, {
-        fee: "100",
-        networkPassphrase: StellarSdk.Networks.TESTNET,
-      })
-        .addOperation(
-          contract.call("get_score", StellarSdk.nativeToScVal(readWallet, { type: "address" }))
-        )
-        .setTimeout(30)
-        .build();
-
-      const sim = await server.simulateTransaction(tx);
-
-      if (StellarSdk.rpc.Api.isSimulationError(sim)) {
-         throw new Error("Simulation failed. Contract might not exist or address is invalid.");
-      }
-
-      const simSuccess = sim as StellarSdk.rpc.Api.SimulateTransactionSuccessResponse;
-      
-      if (!simSuccess.result?.retval) {
+      if (scoreVal === null || scoreVal === undefined) {
         setReadResult("No score found on-chain for this wallet.");
       } else {
-        const scoreVal = StellarSdk.scValToNative(simSuccess.result.retval);
-        setReadResult(`On-Chain Score: ${scoreVal}`);
+        setReadResult(`On-Chain Score: ${String(scoreVal)}`);
       }
       setReadStatus("success");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Read error", err);
       setReadStatus("error");
-      setReadResult(err.message || "Failed to read from contract.");
+      setReadResult(err instanceof Error ? err.message : "Failed to read from contract.");
     }
   };
 

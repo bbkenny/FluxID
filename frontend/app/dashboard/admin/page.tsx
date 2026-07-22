@@ -16,6 +16,7 @@ import {
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { useFreighter, truncateAddress } from "../../context/FreighterContext";
 import { ADMIN_ADDRESS, STELLAR_CONFIG } from "../../../lib/constants";
+import { readContract } from "../../../lib/contractRead";
 import {
   fetchAdminFeedback,
   fetchAdminStats,
@@ -82,23 +83,8 @@ export default function AdminPage() {
   const readOnchainAdmin = useCallback(async () => {
     setReadStatus("loading");
     try {
-      const server = new StellarSdk.rpc.Server(STELLAR_CONFIG.SOROBAN_RPC_URL);
-      const contract = new StellarSdk.Contract(CONTRACT_ID);
-      // Simulation-only source — any valid, real key works for a read.
-      const source = new StellarSdk.Account(ADMIN_ADDRESS, "0");
-      const tx = new StellarSdk.TransactionBuilder(source, {
-        fee: "100",
-        networkPassphrase: StellarSdk.Networks.TESTNET,
-      })
-        .addOperation(contract.call("get_admin"))
-        .setTimeout(30)
-        .build();
-      const sim = await server.simulateTransaction(tx);
-      if (StellarSdk.rpc.Api.isSimulationError(sim)) throw new Error("Simulation failed");
-      const ok = sim as StellarSdk.rpc.Api.SimulateTransactionSuccessResponse;
-      if (ok.result?.retval) {
-        setOnchainAdmin(StellarSdk.scValToNative(ok.result.retval) as string);
-      }
+      const admin = await readContract(CONTRACT_ID, "get_admin");
+      if (typeof admin === "string") setOnchainAdmin(admin);
       setReadStatus("success");
     } catch {
       setReadStatus("error");
