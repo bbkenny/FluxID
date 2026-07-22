@@ -34,16 +34,26 @@ export default function ContractPage() {
       setReadStatus("loading");
       setReadResult(null);
 
-      const scoreVal = await readContract(
+      // get_wallet_info returns None (null) when nothing is stored, unlike
+      // get_score which returns 0 both for "unset" and a real zero score.
+      const info = await readContract(
         contractId,
-        "get_score",
+        "get_wallet_info",
         StellarSdk.nativeToScVal(readWallet, { type: "address" })
       );
 
-      if (scoreVal === null || scoreVal === undefined) {
-        setReadResult("No score found on-chain for this wallet.");
+      if (!info || typeof info !== "object") {
+        setReadResult("No score stored on-chain yet for this wallet.");
       } else {
-        setReadResult(`On-Chain Score: ${String(scoreVal)}`);
+        const rec = info as { score?: number; risk?: unknown; last_updated?: bigint | number };
+        const risk =
+          typeof rec.risk === "string"
+            ? rec.risk
+            : (rec.risk as { tag?: string })?.tag ?? "—";
+        const when = rec.last_updated
+          ? new Date(Number(rec.last_updated) * 1000).toLocaleString()
+          : "—";
+        setReadResult(`On-chain score: ${rec.score ?? "—"} · Risk: ${risk} · Updated: ${when}`);
       }
       setReadStatus("success");
     } catch (err) {
