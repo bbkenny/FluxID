@@ -12,6 +12,8 @@ import {
   AlertTriangle,
   RefreshCw,
   Lock,
+  X,
+  Search,
 } from "lucide-react";
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { useFreighter, truncateAddress } from "../../context/FreighterContext";
@@ -20,6 +22,7 @@ import { readContract } from "../../../lib/contractRead";
 import {
   fetchAdminFeedback,
   fetchAdminStats,
+  type FeedbackEntry,
   type FeedbackSummary,
   type UsageStats,
 } from "../../../lib/metricsApi";
@@ -42,6 +45,23 @@ function StatCard({ icon: Icon, label, value }: { icon: typeof Users; label: str
   );
 }
 
+function FeedbackRow({ f }: { f: FeedbackEntry }) {
+  return (
+    <div className="pressed p-3 rounded-xl">
+      <div className="flex items-center justify-between mb-1">
+        <span style={{ color: "var(--primary)" }} className="text-sm font-bold">
+          {"★".repeat(f.rating)}
+          <span style={{ color: "var(--border)" }}>{"★".repeat(5 - f.rating)}</span>
+        </span>
+        <span style={{ color: "var(--foreground-dim)", fontSize: 12 }}>
+          {f.wallet ? truncateAddress(f.wallet) : "anon"} · {new Date(f.timestamp).toLocaleDateString()}
+        </span>
+      </div>
+      <p style={{ color: "var(--foreground)", fontSize: 14 }}>{f.message}</p>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { isConnected, publicKey, connect, getKit } = useFreighter();
   const isAdmin = isConnected && publicKey === ADMIN_ADDRESS;
@@ -50,12 +70,16 @@ export default function AdminPage() {
   const [stats, setStats] = useState<UsageStats | null>(null);
   const [feedback, setFeedback] = useState<FeedbackSummary | null>(null);
   const [loadingData, setLoadingData] = useState(false);
+  const [feedbackModal, setFeedbackModal] = useState(false);
+  const [feedbackQuery, setFeedbackQuery] = useState("");
 
   const loadData = useCallback(async () => {
     setLoadingData(true);
     const [s, f] = await Promise.all([fetchAdminStats(), fetchAdminFeedback()]);
-    setStats(s);
-    setFeedback(f);
+    // Only overwrite on a real result — a failed/unreachable fetch returns null,
+    // and we'd rather keep the last good data on screen than blank it out.
+    if (s) setStats(s);
+    if (f) setFeedback(f);
     setLoadingData(false);
   }, []);
 
@@ -75,6 +99,15 @@ export default function AdminPage() {
   const [oracleAddr, setOracleAddr] = useState("");
   const [oracleStatus, setOracleStatus] = useState<ActionStatus>("idle");
   const [oracleResult, setOracleResult] = useState<string | null>(null);
+
+  // Registry wiring: the identity contract points at an oracle_registry, and
+  // that registry authorizes individual oracle addresses. We show the current
+  // wiring before letting the admin change it.
+  const [registryId, setRegistryId] = useState("");
+  const [registryStatus, setRegistryStatus] = useState<ActionStatus>("idle");
+  const [registryResult, setRegistryResult] = useState<string | null>(null);
+  const [currentRegistry, setCurrentRegistry] = useState<string | null>(null);
+  const [oracleAuthState, setOracleAuthState] = useState<string | null>(null);
 
   // ---- Backend admin state ----
   const [backendMsg, setBackendMsg] = useState<string | null>(null);
@@ -152,6 +185,65 @@ export default function AdminPage() {
     }
   };
 
+  const handleSetRegistry = async () => {
+    if (!publicKey) {
+      await connect();
+      return;
+    }
+    if (!StellarSdk.StrKey.isValidContract(registryId)) {
+      setRegistryStatus("error");
+      setRegistryResult("Enter the oracle_registry contract ID (C...).");
+      return;
+    }
+    setRegistryStatus("loading");
+    setRegistryResult(null);
+    try {
+      const hash = await signAndSend(
+        CONTRACT_ID,
+        "set_oracle_registry",
+        StellarSdk.nativeToScVal(publicKey, { type: "address" }),
+        StellarSdk.nativeToScVal(registryId, { type: "address" })
+      );
+      setCurrentRegistry(registryId);
+      setRegistryStatus("success");
+      setRegistryResult(`Registry wired. Hash: ${hash}`);
+    } catch (err) {
+      setRegistryStatus("error");
+      setRegistryResult(err instanceof Error ? err.message : "Failed to set oracle registry.");
+    }
+  };
+
+  // The oracle_registry's only view function is is_oracle_authorized, so the
+  // meaningful "current state" we can read is whether the entered oracle address
+  // is currently allowed to write scores. (The identity contract stores the
+  // registry ID but exposes no getter for it, so that link isn't readable live.)
+  const readOracleState = async () => {
+    if (!StellarSdk.StrKey.isValidContract(oracleContractId)) {
+      setOracleStatus("error");
+      setOracleResult("Enter the oracle_registry contract ID (C...) to read its state.");
+      return;
+    }
+    if (!StellarSdk.StrKey.isValidEd25519PublicKey(oracleAddr)) {
+      setOracleStatus("error");
+      setOracleResult("Enter an oracle wallet address (G...) to check its authorization.");
+      return;
+    }
+    setOracleStatus("loading");
+    setOracleResult(null);
+    try {
+      const authed = await readContract(
+        oracleContractId,
+        "is_oracle_authorized",
+        StellarSdk.nativeToScVal(oracleAddr, { type: "address" })
+      );
+      setOracleAuthState(authed ? "authorized" : "not authorized");
+      setOracleStatus("success");
+    } catch (err) {
+      setOracleStatus("error");
+      setOracleResult(err instanceof Error ? err.message : "Could not read registry state.");
+    }
+  };
+
   const handleOracle = async (action: "add_oracle" | "remove_oracle") => {
     if (!publicKey) {
       await connect();
@@ -177,6 +269,7 @@ export default function AdminPage() {
         StellarSdk.nativeToScVal(oracleAddr, { type: "address" })
       );
       setOracleStatus("success");
+      setOracleAuthState(action === "add_oracle" ? "authorized" : "not authorized");
       setOracleResult(`${action === "add_oracle" ? "Authorized" : "Revoked"}. Hash: ${hash}`);
     } catch (err) {
       setOracleStatus("error");
@@ -354,22 +447,19 @@ export default function AdminPage() {
                 ))}
               </div>
             </div>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {feedback.entries.map((f, i) => (
-                <div key={i} className="pressed p-3 rounded-xl">
-                  <div className="flex items-center justify-between mb-1">
-                    <span style={{ color: "var(--primary)" }} className="text-sm font-bold">
-                      {"★".repeat(f.rating)}
-                      <span style={{ color: "var(--border)" }}>{"★".repeat(5 - f.rating)}</span>
-                    </span>
-                    <span style={{ color: "var(--foreground-dim)", fontSize: 12 }}>
-                      {f.wallet ? truncateAddress(f.wallet) : "anon"} · {new Date(f.timestamp).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p style={{ color: "var(--foreground)", fontSize: 14 }}>{f.message}</p>
-                </div>
+            <div className="space-y-3">
+              {feedback.entries.slice(0, 5).map((f, i) => (
+                <FeedbackRow key={i} f={f} />
               ))}
             </div>
+            {feedback.entries.length > 5 && (
+              <button
+                onClick={() => setFeedbackModal(true)}
+                className="btn btn-outline w-full mt-3"
+              >
+                View all {feedback.entries.length} responses
+              </button>
+            )}
           </>
         ) : (
           <p style={{ color: "var(--foreground-muted)", fontSize: 14 }}>
@@ -417,8 +507,38 @@ export default function AdminPage() {
 
           <div className="border-t border-[var(--border)] my-5" />
 
+          {/* Step 1: wire the identity contract to an oracle_registry (one-time) */}
           <h3 style={{ color: "var(--foreground)", fontWeight: 700, fontSize: 14 }} className="mb-2">
-            Oracle registry
+            Oracle registry wiring
+          </h3>
+          {currentRegistry && (
+            <p style={{ color: "var(--foreground-muted)", fontSize: 12 }} className="mb-2 break-all font-mono">
+              Registry admin / current: {currentRegistry}
+            </p>
+          )}
+          <label style={{ color: "var(--foreground-muted)", fontSize: 12 }} className="block mb-1">
+            oracle_registry contract to wire
+          </label>
+          <input
+            value={registryId}
+            onChange={(e) => setRegistryId(e.target.value)}
+            placeholder="C... oracle_registry contract ID"
+            className="w-full pressed px-4 py-3 rounded-xl text-[var(--foreground)] outline-none mb-3 font-mono text-sm"
+          />
+          <button
+            onClick={handleSetRegistry}
+            disabled={registryStatus === "loading"}
+            className="w-full card-primary py-3 rounded-xl font-bold text-[var(--background)] disabled:opacity-70"
+          >
+            {registryStatus === "loading" ? "Signing..." : "Set oracle registry"}
+          </button>
+          {resultPanel(registryStatus, registryResult)}
+
+          <div className="border-t border-[var(--border)] my-5" />
+
+          {/* Step 2: authorize the backend oracle key inside the registry */}
+          <h3 style={{ color: "var(--foreground)", fontWeight: 700, fontSize: 14 }} className="mb-2">
+            Authorize oracle
           </h3>
           <input
             value={oracleContractId}
@@ -429,9 +549,24 @@ export default function AdminPage() {
           <input
             value={oracleAddr}
             onChange={(e) => setOracleAddr(e.target.value)}
-            placeholder="G... oracle wallet address"
-            className="w-full pressed px-4 py-3 rounded-xl text-[var(--foreground)] outline-none mb-3 font-mono text-sm"
+            placeholder="G... backend oracle address (ADMIN_SECRET_KEY public key)"
+            className="w-full pressed px-4 py-3 rounded-xl text-[var(--foreground)] outline-none mb-2 font-mono text-sm"
           />
+          {oracleAuthState && (
+            <p
+              style={{ fontSize: 12 }}
+              className={`mb-2 font-medium ${oracleAuthState === "authorized" ? "text-[#8FA828]" : "text-[var(--foreground-muted)]"}`}
+            >
+              Current status: this oracle is {oracleAuthState}.
+            </p>
+          )}
+          <button
+            onClick={readOracleState}
+            disabled={oracleStatus === "loading"}
+            className="btn btn-outline w-full mb-2"
+          >
+            {oracleStatus === "loading" ? "Reading..." : "Check current status"}
+          </button>
           <div className="flex gap-2">
             <button
               onClick={() => handleOracle("add_oracle")}
@@ -476,6 +611,61 @@ export default function AdminPage() {
           {resultPanel(backendStatus, backendMsg)}
         </div>
       </div>
+
+      {/* Full feedback modal — scrollable + filterable so a large volume of
+          responses never floods the admin page itself. */}
+      {feedbackModal && feedback && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={() => setFeedbackModal(false)}
+        >
+          <div
+            className="card w-full max-w-2xl max-h-[85vh] flex flex-col p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 style={{ color: "var(--foreground)", fontWeight: 800, fontSize: 18 }}>
+                All feedback ({feedback.total})
+              </h3>
+              <button onClick={() => setFeedbackModal(false)} className="btn btn-outline p-2">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="relative mb-4">
+              <Search
+                size={16}
+                style={{ color: "var(--foreground-muted)" }}
+                className="absolute left-3 top-1/2 -translate-y-1/2"
+              />
+              <input
+                value={feedbackQuery}
+                onChange={(e) => setFeedbackQuery(e.target.value)}
+                placeholder="Filter by message or wallet..."
+                className="w-full pressed pl-9 pr-4 py-3 rounded-xl text-[var(--foreground)] outline-none text-sm"
+              />
+            </div>
+            <div className="space-y-3 overflow-y-auto pr-1">
+              {(() => {
+                const q = feedbackQuery.trim().toLowerCase();
+                const rows = q
+                  ? feedback.entries.filter(
+                      (f) =>
+                        f.message.toLowerCase().includes(q) ||
+                        (f.wallet ?? "").toLowerCase().includes(q)
+                    )
+                  : feedback.entries;
+                if (rows.length === 0) {
+                  return (
+                    <p style={{ color: "var(--foreground-muted)", fontSize: 14 }}>No matching feedback.</p>
+                  );
+                }
+                return rows.map((f, i) => <FeedbackRow key={i} f={f} />);
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
