@@ -8,6 +8,7 @@ import { registerPaidRoutes } from './routes/paid.routes.js';
 import { registerMcpRoutes } from './routes/mcp.routes.js';
 import { registerOnChainRoutes } from './routes/onchain.routes.js';
 import { registerProtocolRoutes } from './routes/protocol.routes.js';
+import { registerMetricsRoutes } from './routes/metrics.routes.js';
 import { logger } from './utils/logger.js';
 
 export async function buildServer() {
@@ -42,6 +43,10 @@ export async function buildServer() {
       protocolAlerts: 'GET /protocol/alerts?network=&lookbackHours=',
       protocolWalletsAdd: 'POST /protocol/wallets  body: { wallets: string[], network?: "mainnet" | "testnet" }',
       protocolWalletsReset: 'DELETE /protocol/wallets?network=',
+      logEvent: 'POST /events  body: { type, wallet?, network? }',
+      submitFeedback: 'POST /feedback  body: { rating: 1-5, message, wallet? }',
+      adminStats: 'GET /admin/stats',
+      adminFeedback: 'GET /admin/feedback',
     },
     docs: 'See README.md and docs/ in the repo for full usage.',
   }));
@@ -53,6 +58,7 @@ export async function buildServer() {
   await registerMcpRoutes(fastify);
   await registerOnChainRoutes(fastify);
   await registerProtocolRoutes(fastify);
+  await registerMetricsRoutes(fastify);
 
   fastify.setErrorHandler((error, _request, reply) => {
     logger.error({ error }, 'Unhandled error');
