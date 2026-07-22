@@ -76,10 +76,23 @@ export default function AdminPage() {
   const loadData = useCallback(async () => {
     setLoadingData(true);
     const [s, f] = await Promise.all([fetchAdminStats(), fetchAdminFeedback()]);
-    // Only overwrite on a real result — a failed/unreachable fetch returns null,
-    // and we'd rather keep the last good data on screen than blank it out.
-    if (s) setStats(s);
-    if (f) setFeedback(f);
+    // Refresh must never blank the panel. Two failure shapes to guard against:
+    //   1. null            → fetch failed / backend unreachable.
+    //   2. valid-but-empty → the store was reset (Render's ephemeral disk gets
+    //                        wiped on redeploy and on free-tier cold starts).
+    // In both cases, if we already have data on screen we keep that last good
+    // snapshot rather than overwriting it with nothing. A first load still shows
+    // the true empty state (prev is null), so this only protects a populated view.
+    setStats((prev) => {
+      if (!s) return prev;
+      if (s.totalEvents === 0 && prev && prev.totalEvents > 0) return prev;
+      return s;
+    });
+    setFeedback((prev) => {
+      if (!f) return prev;
+      if (f.total === 0 && prev && prev.total > 0) return prev;
+      return f;
+    });
     setLoadingData(false);
   }, []);
 
