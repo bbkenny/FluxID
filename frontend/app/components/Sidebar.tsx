@@ -252,6 +252,9 @@ export default function Sidebar() {
     <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40">
       <nav className="card relative flex items-stretch overflow-x-auto gap-3 px-3 py-2 shadow-2xl [scrollbar-width:none] [-webkit-overflow-scrolling:touch] snap-x">
         <div className="flex items-stretch gap-3 min-w-max">
+          {/* Leading spacer keeps the first pill off the rounded card corner,
+              matching the trailing breathing room on the right. */}
+          <div className="w-1 shrink-0" aria-hidden />
           {navSections.map((section, si) => (
             <div key={section.id} className="flex items-stretch gap-3">
               {si > 0 && (
@@ -290,6 +293,8 @@ export default function Sidebar() {
               </div>
             </div>
           ))}
+          {/* Trailing spacer clears the fade + right corner. */}
+          <div className="w-6 shrink-0" aria-hidden />
         </div>
       </nav>
       {/* Right-edge fade cue that there's more to scroll */}
