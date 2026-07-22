@@ -36,8 +36,9 @@ export default function ContractPage() {
       const server = new StellarSdk.rpc.Server("https://soroban-testnet.stellar.org");
       const contract = new StellarSdk.Contract(contractId);
 
-      // Dummy account for simulation
-      const source = new StellarSdk.Account("GAQJXYVAYEVMOPBGBQ3U2B6K2K2HMWF5J7OUN6TMWHTW4H5FXXN2KHLW", "0");
+      // Simulation-only source account. Reads don't submit or pay, so this
+      // just needs to be a valid, real key — the deployer address works.
+      const source = new StellarSdk.Account(ADMIN_ADDRESS, "0");
 
       const tx = new StellarSdk.TransactionBuilder(source, {
         fee: "100",

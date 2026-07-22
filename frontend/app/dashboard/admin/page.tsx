@@ -84,10 +84,8 @@ export default function AdminPage() {
     try {
       const server = new StellarSdk.rpc.Server(STELLAR_CONFIG.SOROBAN_RPC_URL);
       const contract = new StellarSdk.Contract(CONTRACT_ID);
-      const source = new StellarSdk.Account(
-        "GAQJXYVAYEVMOPBGBQ3U2B6K2K2HMWF5J7OUN6TMWHTW4H5FXXN2KHLW",
-        "0"
-      );
+      // Simulation-only source — any valid, real key works for a read.
+      const source = new StellarSdk.Account(ADMIN_ADDRESS, "0");
       const tx = new StellarSdk.TransactionBuilder(source, {
         fee: "100",
         networkPassphrase: StellarSdk.Networks.TESTNET,
