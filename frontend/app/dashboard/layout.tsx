@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
 
             {/* Scrollable Content */}
-            <div className="absolute inset-0 overflow-auto p-6 z-10">
+            <div className="absolute inset-0 overflow-auto p-4 sm:p-6 z-10">
               {children}
             </div>
           </div>

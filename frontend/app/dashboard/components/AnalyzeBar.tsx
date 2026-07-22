@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Info, TrendingUp, Wallet } from "lucide-react";
 import { useFreighter, truncateAddress } from "../../context/FreighterContext";
@@ -28,9 +28,16 @@ export default function AnalyzeBar() {
 
   const [input, setInput] = useState("");
 
+  // Pre-fill the remembered address once, on first mount only. Keying this on
+  // `input` (as before) made deletions bounce back — clearing the field let the
+  // effect re-run and refill it. A ref gates it to a single prefill.
+  const prefilled = useRef(false);
   useEffect(() => {
-    if (analyzedAddress && !input) setInput(analyzedAddress);
-  }, [analyzedAddress, input]);
+    if (!prefilled.current && analyzedAddress) {
+      setInput(analyzedAddress);
+      prefilled.current = true;
+    }
+  }, [analyzedAddress]);
 
   const trimmed = input.trim();
   const hasInput = trimmed.length > 0;
@@ -55,7 +62,7 @@ export default function AnalyzeBar() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 mb-6"
+      className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 sm:p-5 mb-6"
       id="tour-wallet-input"
     >
       <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
@@ -73,9 +80,9 @@ export default function AnalyzeBar() {
         />
         {/* On mobile these two share a row (toggle left, Analyze right); on
             sm+ the wrapper dissolves so they flow inline with the input. */}
-        <div className="flex items-center justify-between gap-3 sm:contents">
+        <div className="flex items-center justify-between gap-2 sm:gap-3 sm:contents">
           <div
-            className="bg-[var(--background)] border border-[var(--border)] flex items-center p-1 rounded-xl"
+            className="bg-[var(--background)] border border-[var(--border)] flex items-center p-1 rounded-xl shrink-0"
             role="radiogroup"
             aria-label="Network"
           >
@@ -91,7 +98,7 @@ export default function AnalyzeBar() {
                   color: network === n ? "var(--background)" : "var(--foreground-muted)",
                   fontWeight: 700,
                 }}
-                className="px-2.5 sm:px-3 py-2 rounded-lg uppercase text-[11px] sm:text-xs transition-colors disabled:opacity-60"
+                className="px-2 sm:px-3 py-2 rounded-lg uppercase text-[10px] sm:text-xs transition-colors disabled:opacity-60"
               >
                 {n}
               </button>
@@ -100,7 +107,7 @@ export default function AnalyzeBar() {
           <button
             onClick={onAnalyze}
             disabled={isAnalyzing || !isValid}
-            className="btn btn-primary flex items-center gap-2"
+            className="btn btn-primary flex items-center justify-center gap-1.5 sm:gap-2 shrink-0 px-4 sm:px-5"
           >
             {isAnalyzing ? <AnalyzingButton /> : <><TrendingUp size={16} />Analyze</>}
           </button>
