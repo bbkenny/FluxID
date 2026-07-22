@@ -6,26 +6,45 @@ import Image from "next/image";
 import { useFreighter, truncateAddress } from "../context/FreighterContext";
 import { Wallet, LogOut, Bell, ChevronDown, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 
 export default function Header() {
   const pathname = usePathname();
-  const { publicKey: address, isConnected, isLoading, connect, disconnect } = useFreighter();
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  
+  const {
+    publicKey: address,
+    isConnected,
+    isLoading,
+    connect,
+    disconnect,
+  } = useFreighter();
+  const { setTheme, resolvedTheme } = useTheme();
+  // Client-mount guard for next-themes (avoids SSR hydration mismatch on the
+  // theme icon) without a setState-in-effect. Returns false on the server and
+  // during the first client render, true thereafter.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
   // Dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [network, setNetwork] = useState<"testnet" | "mainnet">("testnet");
-  const [balances, setBalances] = useState<{ xlm: string; usdc: string }>({ xlm: "...", usdc: "..." });
+  const [balances, setBalances] = useState<{ xlm: string; usdc: string }>({
+    xlm: "...",
+    usdc: "...",
+  });
   const [isFetchingBalances, setIsFetchingBalances] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     }
@@ -35,69 +54,76 @@ export default function Header() {
 
   // Fetch balances when dropdown opens or network changes
   useEffect(() => {
-    if (isDropdownOpen && address) {
-      setIsFetchingBalances(true);
-      const horizonUrl = network === "mainnet" 
-        ? "https://horizon.stellar.org" 
+    if (!isDropdownOpen || !address) return;
+    let active = true;
+    const horizonUrl =
+      network === "mainnet"
+        ? "https://horizon.stellar.org"
         : "https://horizon-testnet.stellar.org";
-        
-      fetch(`${horizonUrl}/accounts/${address}`)
-        .then((res) => {
-          if (!res.ok) throw new Error("Account not found");
-          return res.json();
-        })
-        .then((data) => {
-          let xlm = "0.00";
-          let usdc = "0.00";
-          
-          if (data.balances) {
-            for (const b of data.balances) {
-              if (b.asset_type === "native") {
-                xlm = parseFloat(b.balance).toFixed(2);
-              } else if (b.asset_code === "USDC") {
-                usdc = parseFloat(b.balance).toFixed(2);
-              }
+
+    async function loadBalances() {
+      setIsFetchingBalances(true);
+      try {
+        const res = await fetch(`${horizonUrl}/accounts/${address}`);
+        if (!res.ok) throw new Error("Account not found");
+        const data = await res.json();
+
+        let xlm = "0.00";
+        let usdc = "0.00";
+        if (data.balances) {
+          for (const b of data.balances) {
+            if (b.asset_type === "native") {
+              xlm = parseFloat(b.balance).toFixed(2);
+            } else if (b.asset_code === "USDC") {
+              usdc = parseFloat(b.balance).toFixed(2);
             }
           }
-          setBalances({ xlm, usdc });
-        })
-        .catch((err) => {
-          console.error(`Failed to fetch balances on ${network}`, err);
-          setBalances({ xlm: "0.00", usdc: "0.00" });
-        })
-        .finally(() => setIsFetchingBalances(false));
+        }
+        if (active) setBalances({ xlm, usdc });
+      } catch (err) {
+        console.error(`Failed to fetch balances on ${network}`, err);
+        if (active) setBalances({ xlm: "0.00", usdc: "0.00" });
+      } finally {
+        if (active) setIsFetchingBalances(false);
+      }
     }
-  }, [isDropdownOpen, address, network]);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+    loadBalances();
+    return () => {
+      active = false;
+    };
+  }, [isDropdownOpen, address, network]);
 
   return (
     <motion.header
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      style={{ 
-        background: "var(--surface)", 
+      style={{
+        background: "var(--surface)",
       }}
       className={
-        pathname === '/'
+        pathname === "/"
           ? "card fixed top-4 left-0 right-0 mx-auto w-[calc(100%-2rem)] max-w-7xl z-40 h-20"
           : "card fixed top-4 left-4 right-4 z-40 h-20"
       }
     >
-      <div className={`h-full mx-auto px-4 sm:px-6 flex items-center justify-between ${pathname === '/' ? 'w-full' : 'max-w-[1600px]'}`}>
+      <div
+        className={`h-full mx-auto px-4 sm:px-6 flex items-center justify-between ${pathname === "/" ? "w-full" : "max-w-[1600px]"}`}
+      >
         {/* Left: Logo */}
         <div className="flex items-center gap-4 sm:gap-8">
           <Link href="/" className="flex items-center gap-2">
-            <Image 
-              src="/header_assets/fluxID-logo.png" 
-              alt="FluxID" 
-              width={42} 
-              height={42}
-              className="sm:w-[52px] sm:h-[52px]"
+            <Image
+              src="/header_assets/fluxID-logo.png"
+              alt="FluxID"
+              width={34}
+              height={34}
+              className="sm:w-10 sm:h-10"
             />
-            <span className="hidden sm:inline-block" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "0.04em" }}>
+            <span
+              className="hidden sm:inline-block"
+              style={{ fontSize: 22, fontWeight: 700, letterSpacing: "0.04em" }}
+            >
               <span style={{ color: "#8FA828" }}>Flux</span>
               <span style={{ color: "var(--foreground)" }}>ID</span>
             </span>
@@ -107,55 +133,74 @@ export default function Header() {
         {/* Right: Notifications + Theme + Wallet */}
         <div className="flex items-center gap-2">
           {/* All in one border container */}
-          <div 
-            style={{ 
-              background: "var(--surface)", 
+          <div
+            style={{
+              background: "var(--surface)",
               border: "1px solid var(--border)",
-              borderRadius: 10
+              borderRadius: 10,
             }}
             className="flex items-center gap-1 p-1"
           >
             {/* Notification */}
-            <button 
+            <button
               style={{ color: "var(--foreground-muted)" }}
-              className="hidden sm:flex p-2 rounded-lg hover:bg-[var(--border)] transition-colors"
+              className="hidden sm:flex p-2 rounded-lg hover:bg-border transition-colors"
             >
               <Bell size={18} />
             </button>
 
             {/* Theme Toggle */}
             {mounted && (
-              <button 
-                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              <button
+                onClick={() =>
+                  setTheme(resolvedTheme === "dark" ? "light" : "dark")
+                }
                 style={{ color: "var(--foreground-muted)" }}
-                className="hidden sm:flex p-2 rounded-lg hover:bg-[var(--border)] transition-colors"
+                className="hidden sm:flex p-2 rounded-lg hover:bg-border transition-colors"
               >
-                {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                {resolvedTheme === "dark" ? (
+                  <Sun size={18} />
+                ) : (
+                  <Moon size={18} />
+                )}
               </button>
             )}
 
             {/* Connect Wallet or Address */}
             {isConnected && address ? (
-              <div className="flex items-center gap-2 relative" ref={dropdownRef}>
-                <button 
+              <div
+                className="flex items-center gap-2 relative"
+                ref={dropdownRef}
+              >
+                <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  style={{ 
-                    background: isDropdownOpen ? "var(--surface)" : "var(--surface)", 
-                    borderRadius: 16
+                  style={{
+                    background: isDropdownOpen
+                      ? "var(--surface)"
+                      : "var(--surface)",
+                    borderRadius: 16,
                   }}
-                  className={`flex items-center gap-2 hover:bg-[var(--surface)] transition-colors cursor-pointer ${isDropdownOpen ? "pressed" : "card"}`}
+                  className={`flex items-center gap-2 hover:bg-surface transition-colors cursor-pointer ${isDropdownOpen ? "pressed" : "card"}`}
                 >
                   <Wallet size={14} style={{ color: "var(--primary)" }} />
-                  <span style={{ color: "var(--foreground)", fontSize: 13, fontWeight: 600 }}>
+                  <span
+                    style={{
+                      color: "var(--foreground)",
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
                     {truncateAddress(address)}
                   </span>
-                  <ChevronDown 
-                    size={14} 
-                    style={{ 
-                      color: "var(--foreground-muted)", 
-                      transform: isDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                      transition: "transform 0.2s ease"
-                    }} 
+                  <ChevronDown
+                    size={14}
+                    style={{
+                      color: "var(--foreground-muted)",
+                      transform: isDropdownOpen
+                        ? "rotate(180deg)"
+                        : "rotate(0deg)",
+                      transition: "transform 0.2s ease",
+                    }}
                   />
                 </button>
 
@@ -172,13 +217,17 @@ export default function Header() {
                       right: 0,
                       width: 220,
                       padding: 16,
-                      zIndex: 50
+                      zIndex: 50,
                     }}
-                    className="card !rounded-none"
+                    className="card rounded-none!"
                   >
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)]">Balances</span>
-                      {isFetchingBalances && <div className="w-3 h-3 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>}
+                      <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">
+                        Balances
+                      </span>
+                      {isFetchingBalances && (
+                        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      )}
                     </div>
 
                     {/* Network Toggle */}
@@ -186,7 +235,9 @@ export default function Header() {
                       <button
                         onClick={() => setNetwork("testnet")}
                         className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all duration-200 ${
-                          network === "testnet" ? "card text-[var(--primary)]" : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
+                          network === "testnet"
+                            ? "card text-primary"
+                            : "text-foreground-muted hover:text-foreground"
                         }`}
                       >
                         Testnet
@@ -194,59 +245,76 @@ export default function Header() {
                       <button
                         onClick={() => setNetwork("mainnet")}
                         className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all duration-200 ${
-                          network === "mainnet" ? "card text-[var(--primary)]" : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
+                          network === "mainnet"
+                            ? "card text-primary"
+                            : "text-foreground-muted hover:text-foreground"
                         }`}
                       >
                         Mainnet
                       </button>
                     </div>
-                    
+
                     <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-semibold flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-[var(--foreground)]"></div>
+                          <div className="w-2 h-2 rounded-full bg-foreground"></div>
                           XLM
                         </span>
-                        <span className="text-sm font-mono">{balances.xlm}</span>
+                        <span className="text-sm font-mono">
+                          {balances.xlm}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-semibold flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-[#2775CA]"></div>
                           USDC
                         </span>
-                        <span className="text-sm font-mono">{balances.usdc}</span>
+                        <span className="text-sm font-mono">
+                          {balances.usdc}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="h-[1px] w-full bg-[var(--shadow-dark)] opacity-20 my-4"></div>
+                    <div className="h-px w-full bg-(--shadow-dark) opacity-20 my-4"></div>
 
                     <button
                       onClick={() => {
                         setIsDropdownOpen(false);
                         disconnect();
                       }}
-                      className="w-full flex items-center gap-2 justify-center text-sm font-bold text-[var(--error)] hover:bg-[var(--surface)] py-2 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-2 justify-center text-sm font-bold text-(--error) hover:bg-surface py-2 rounded-lg transition-colors"
                     >
                       <LogOut size={14} />
                       Disconnect
                     </button>
 
                     {/* Mobile Only Actions */}
-                    <div className="flex sm:hidden justify-between items-center mt-3 pt-3 border-t border-[var(--shadow-dark)]">
-                      <button 
+                    <div className="flex sm:hidden justify-between items-center mt-3 pt-3 border-t border-(--shadow-dark)">
+                      <button
                         style={{ color: "var(--foreground-muted)" }}
-                        className="p-2 rounded-lg hover:bg-[var(--surface)] transition-colors flex items-center gap-2"
+                        className="p-2 rounded-lg hover:bg-surface transition-colors flex items-center gap-2"
                       >
-                        <Bell size={16} /> <span className="text-xs font-semibold">Alerts</span>
+                        <Bell size={16} />{" "}
+                        <span className="text-xs font-semibold">Alerts</span>
                       </button>
                       {mounted && (
-                        <button 
-                          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                        <button
+                          onClick={() =>
+                            setTheme(
+                              resolvedTheme === "dark" ? "light" : "dark",
+                            )
+                          }
                           style={{ color: "var(--foreground-muted)" }}
-                          className="p-2 rounded-lg hover:bg-[var(--surface)] transition-colors flex items-center gap-2"
+                          className="p-2 rounded-lg hover:bg-surface transition-colors flex items-center gap-2"
                         >
-                          {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />} 
-                          <span className="text-xs font-semibold">{resolvedTheme === "dark" ? "Light" : "Dark"}</span>
+                          {resolvedTheme === "dark" ? (
+                            <Sun size={16} />
+                          ) : (
+                            <Moon size={16} />
+                          )}
+                          <span className="text-xs font-semibold">
+                            {resolvedTheme === "dark" ? "Light" : "Dark"}
+                          </span>
                         </button>
                       )}
                     </div>
