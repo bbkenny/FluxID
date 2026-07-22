@@ -297,6 +297,49 @@ FluxID is infrastructure for:
 
 ## Screenshots
 
+## Level 4 - Green Belt Submission
+
+- **Live demo link:** [https://fluxid.vercel.app/](https://fluxid.vercel.app/)
+- **Deployed contract address:** `CAUICITFNLDMHPXARAXARFBS3JKRGZZP5CE7B4DTLFBCJB5F4U24CKBP` (Liquidity Identity)
+- **Transaction hash of a contract call:** [a00cfdeaadf703ca17b033013974e130e3baab961450fc4a18064230f0d2de3e](https://stellar.expert/explorer/testnet/tx/a00cfdeaadf703ca17b033013974e130e3baab961450fc4a18064230f0d2de3e)
+- **Demo video link:** _<!-- add Level 4 Loom link here -->_
+
+### 🟢 Level 4 Requirements Map
+
+Each Level 4 requirement mapped to the exact file, link, or screenshot that satisfies it.
+
+| Requirement | Status | Proof |
+|---|---|---|
+| Production-ready MVP | ✅ | Live at [fluxid.vercel.app](https://fluxid.vercel.app/) — full scoring, dashboard, contract, and protocol views |
+| Stable frontend + smart contract architecture | ✅ | Separated `frontend/` (Next.js) · `backend/` (Fastify) · `smartcontract/` (Soroban) layers |
+| Mobile responsive UI | ✅ | Desktop rail + `lg:hidden` mobile bottom-nav in [`Sidebar.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/components/Sidebar.tsx); screenshot below |
+| Loading states & error handling | ✅ | [`Skeletons.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/components/Skeletons.tsx) + wallet/error handling in [`FreighterContext.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/context/FreighterContext.tsx) |
+| Monitoring & analytics integration | ✅ | Vercel [`Analytics`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/layout.tsx) + Speed Insights, plus a self-hosted usage panel on the [Admin page](https://github.com/bbkenny/FluxID/blob/main/frontend/app/dashboard/admin/page.tsx) fed by [`metrics.service.ts`](https://github.com/bbkenny/FluxID/blob/main/backend/src/services/metrics.service.ts) |
+| Usage / event tracking | ✅ | `logEvent("wallet_connect")` in [`FreighterContext.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/context/FreighterContext.tsx#L104) and `logEvent("score_run")` in [`AnalysisContext.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/dashboard/context/AnalysisContext.tsx#L78) → `POST /events` |
+| User feedback collection | ✅ | Floating widget [`Feedback.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/components/Feedback.tsx) → `POST /feedback`; summary on the Admin page |
+| 10+ real user wallet interactions | ⏳ | Captured via the usage panel — screenshot below _<!-- add 10+ wallet proof screenshot -->_ |
+| Basic user feedback summary | ⏳ | Admin feedback panel (avg rating + messages) — screenshot below _<!-- add feedback summary screenshot -->_ |
+| Production deployment | ✅ | Frontend on Vercel; backend on Render (see [`DEPLOYMENT_PERSISTENCE.md`](DEPLOYMENT_PERSISTENCE.md) for durable-storage setup) |
+| Smart contracts on Stellar testnet | ✅ | `CAUICITFNLDMHPXARAXARFBS3JKRGZZP5CE7B4DTLFBCJB5F4U24CKBP` + oracle registry |
+| Minimum 15+ meaningful commits | ✅ | [Commit history](https://github.com/bbkenny/FluxID/commits/main) (210+ commits) |
+| Documentation | ✅ | This README + [`docs/`](https://github.com/bbkenny/FluxID/tree/main/docs) |
+
+### Added Features for Level 4
+- **Monitoring & Analytics Integration:** Mounted Vercel Analytics + Speed Insights, and built a self-hosted usage-tracking layer (`metrics.service.ts`) that records wallet connects and score runs to an append-only JSONL store, surfaced on the Admin page (unique wallets, total events, recent-wallet table).
+- **User Feedback Collection:** Added an app-wide floating feedback widget (1–5 star rating + message) that posts to the backend, with an average-rating and message summary on the Admin page.
+- **Admin Control Surface:** A wallet-gated `/dashboard/admin` page (visible only to the deployer wallet) consolidating usage stats, feedback, on-chain oracle controls, and backend health actions.
+- **Durable Storage Guidance:** Documented the Render persistent-disk + `FLUXID_DATA_DIR` setup so usage/feedback data survives redeploys and cold starts.
+
+### Level 4 Screenshots
+_<!-- Add the following once captured:
+![Product UI](docs/screenshots/L4_Product_UI.png)
+![Analytics / Monitoring](docs/screenshots/L4_Analytics.png)
+![Feedback Summary](docs/screenshots/L4_Feedback.png)
+![10+ Wallet Interactions](docs/screenshots/L4_Wallet_Proof.png)
+-->_
+
+---
+
 ## Level 3 - Orange Belt Submission
 
 - **Live demo link:** [https://fluxid.vercel.app/](https://fluxid.vercel.app/)
