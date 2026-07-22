@@ -9,6 +9,15 @@ import type { TransactionData } from "../../../lib/scoring";
 
 type DirectionFilter = "all" | "inflow" | "outflow" | "swap";
 
+// "All" keeps its text on every screen; the three direction filters collapse to
+// icon-only on mobile so the row never outgrows the card.
+const FILTERS: { key: DirectionFilter; label: string; Icon: typeof ArrowDownLeft | null }[] = [
+  { key: "all", label: "All", Icon: null },
+  { key: "inflow", label: "Inflow", Icon: ArrowDownLeft },
+  { key: "outflow", label: "Outflow", Icon: ArrowUpRight },
+  { key: "swap", label: "Swap", Icon: ArrowLeftRight },
+];
+
 function formatAmount(amount: number): string {
   return amount.toLocaleString(undefined, { maximumFractionDigits: 4 });
 }
@@ -79,27 +88,30 @@ export default function TransactionsPage() {
 
           <div className="card overflow-hidden">
             <div
-              className="flex items-center justify-between px-5 py-3 border-b border-border"
+              className="flex items-center justify-between gap-2 px-3 sm:px-5 py-3 border-b border-border"
             >
-              <span style={{ color: "var(--foreground-muted)", fontSize: 12 }} className="flex items-center gap-1.5">
-                <Filter size={12} /> {filtered.length} transaction{filtered.length === 1 ? "" : "s"}
+              <span style={{ color: "var(--foreground-muted)", fontSize: 12 }} className="flex items-center gap-1.5 shrink-0">
+                <Filter size={12} /> {filtered.length}<span className="hidden sm:inline"> transaction{filtered.length === 1 ? "" : "s"}</span>
               </span>
               <div
-                className="pressed p-0.5 flex items-center"
+                className="pressed p-0.5 flex items-center gap-0.5"
               >
-                {(["all", "inflow", "outflow", "swap"] as DirectionFilter[]).map((f) => (
+                {FILTERS.map(({ key, label, Icon }) => (
                   <button
-                    key={f}
-                    onClick={() => setFilter(f)}
+                    key={key}
+                    onClick={() => setFilter(key)}
+                    aria-label={label}
+                    title={label}
                     style={{
-                      background: filter === f ? "var(--primary)" : "transparent",
-                      color: filter === f ? "var(--background)" : "var(--foreground-muted)",
+                      background: filter === key ? "var(--primary)" : "transparent",
+                      color: filter === key ? "var(--background)" : "var(--foreground-muted)",
                       fontSize: 11,
                       fontWeight: 700,
                     }}
-                    className="px-3 py-1.5 rounded-md uppercase transition-colors"
+                    className="px-2 sm:px-3 py-1.5 rounded-md uppercase transition-colors flex items-center gap-1"
                   >
-                    {f}
+                    {Icon ? <Icon size={13} /> : null}
+                    <span className={Icon ? "hidden sm:inline" : ""}>{label}</span>
                   </button>
                 ))}
               </div>
@@ -113,7 +125,62 @@ export default function TransactionsPage() {
               </div>
             ) : (
               <div className="max-h-[60vh] overflow-y-auto">
-                <table className="w-full text-sm">
+                {/* Mobile: stacked cards so nothing scrolls sideways. */}
+                <div className="sm:hidden divide-y divide-[var(--border)]">
+                  {filtered.map((tx) => {
+                    const dirColor =
+                      tx.type === "inflow" ? "#22c55e" : tx.type === "outflow" ? "#ef4444" : "#8FA828";
+                    return (
+                      <div key={tx.id} className="px-4 py-3 flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          {tx.type === "inflow" ? (
+                            <span style={{ color: dirColor }} className="inline-flex items-center gap-1 text-xs font-semibold">
+                              <ArrowDownLeft size={12} /> IN
+                            </span>
+                          ) : tx.type === "outflow" ? (
+                            <span style={{ color: dirColor }} className="inline-flex items-center gap-1 text-xs font-semibold">
+                              <ArrowUpRight size={12} /> OUT
+                            </span>
+                          ) : (
+                            <span style={{ color: dirColor }} className="inline-flex items-center gap-1 text-xs font-semibold">
+                              <ArrowLeftRight size={12} /> SWAP
+                            </span>
+                          )}
+                          <span style={{ color: "var(--foreground-muted)", fontSize: 11 }}>{tx.date}</span>
+                        </div>
+                        <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                          <span
+                            className="font-mono break-all"
+                            style={{ color: "var(--foreground-muted)", fontSize: 12 }}
+                            title={tx.address}
+                          >
+                            {truncateAddress(tx.address)}
+                          </span>
+                          <span className="font-semibold text-right break-all" style={{ color: dirColor, fontSize: 13 }}>
+                            {tx.type === "swap" && tx.swapDetails ? (
+                              <>
+                                {formatAmount(tx.swapDetails.fromAmount)} {tx.swapDetails.fromAsset}
+                                {" → "}
+                                {formatAmount(tx.swapDetails.toAmount)} {tx.swapDetails.toAsset}
+                              </>
+                            ) : (
+                              <>
+                                {tx.type === "inflow" ? "+" : "−"}
+                                {formatAmount(tx.amount)}{" "}
+                                <span style={{ color: "var(--foreground-muted)", fontWeight: 400 }}>
+                                  {assetLabel(tx.asset)}
+                                </span>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop: full table. */}
+                <table className="hidden sm:table w-full text-sm">
                   <thead>
                     <tr style={{ color: "var(--foreground-muted)", fontSize: 11 }}>
                       <th className="text-left px-5 py-3 font-semibold uppercase">Date</th>
