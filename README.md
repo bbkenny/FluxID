@@ -365,6 +365,243 @@ Each Level 3 requirement mapped to the exact file, link, or screenshot that sati
 | Documentation & demo | ✅ | This README + [Loom demo video](https://www.loom.com/share/ba5e12068bae47b1ac6d504b3f1039d2) |
 | Minimum 10+ meaningful commits | ✅ | [Commit history](https://github.com/bbkenny/FluxID/commits/main) (190+ commits) |
 
+### 📂 Frontend Source Files
+
+All frontend source files live inside [`frontend/`](https://github.com/bbkenny/FluxID/tree/main/frontend). Here is the complete source-file tree:
+
+```
+frontend/
+├── app/
+│   ├── components/
+│   │   ├── Header.tsx              ← top nav with wallet connect button
+│   │   ├── Sidebar.tsx             ← dashboard sidebar navigation
+│   │   ├── Skeletons.tsx           ← loading-state skeleton components
+│   │   ├── Toast.tsx               ← toast notification system
+│   │   ├── Feedback.tsx            ← user feedback widget
+│   │   ├── AnimatedScore.tsx       ← animated score display
+│   │   ├── RiskHeatmap.tsx         ← risk visualization
+│   │   ├── FlowChart.tsx           ← transaction flow chart
+│   │   ├── FlowSummary.tsx         ← flow summary component
+│   │   ├── AssetBreakdown.tsx      ← asset breakdown display
+│   │   ├── ExplanationCard.tsx     ← AI explanation card
+│   │   ├── ActivityLog.tsx         ← activity log
+│   │   ├── AgentDemo.tsx           ← agent demo component
+│   │   ├── OnChainSync.tsx         ← on-chain sync status
+│   │   ├── Onboarding.tsx          ← user onboarding
+│   │   ├── ProtocolMetrics.tsx     ← protocol metrics display
+│   │   └── EarlyWarningBanner.tsx  ← early warning alerts
+│   ├── context/
+│   │   └── FreighterContext.tsx     ← wallet connection (Freighter/Albedo/xBull)
+│   ├── dashboard/
+│   │   ├── layout.tsx              ← dashboard layout with sidebar
+│   │   ├── page.tsx                ← main dashboard page
+│   │   ├── contract/page.tsx       ← CONTRACT INTEGRATION (read/write Soroban)
+│   │   ├── analytics/page.tsx      ← analytics page
+│   │   ├── transactions/page.tsx   ← transactions page
+│   │   ├── insights/page.tsx       ← AI insights page
+│   │   ├── protocol/page.tsx       ← protocol overview
+│   │   ├── agent/page.tsx          ← agent gateway
+│   │   ├── settings/page.tsx       ← settings page
+│   │   ├── transfer/page.tsx       ← XLM transfer with wallet signing
+│   │   ├── admin/page.tsx          ← admin control surface
+│   │   ├── components/AnalyzeBar.tsx
+│   │   └── context/AnalysisContext.tsx
+│   ├── layout.tsx                  ← root layout (wraps ThemeProvider + FreighterProvider)
+│   ├── page.tsx                    ← landing page
+│   ├── providers.tsx               ← ThemeProvider wrapper
+│   └── globals.css                 ← global styles
+├── components/
+│   ├── ClientLayout.tsx            ← client layout wrapper
+│   ├── SecurityNotice.tsx          ← security notice component
+│   └── ThemeToggle.tsx             ← theme toggle component
+├── lib/
+│   ├── constants.ts                ← Stellar config (Horizon URL, Soroban RPC, network)
+│   ├── contractRead.ts             ← Soroban read-only contract helper
+│   ├── onchain.ts                  ← on-chain sync utilities
+│   ├── scoring.ts                  ← liquidity scoring engine
+│   ├── scoring.test.ts             ← vitest tests for scoring
+│   ├── agentDemo.ts                ← agent demo + payment signing
+│   ├── metricsApi.ts               ← usage event logging
+│   └── protocolApi.ts              ← protocol API helpers
+├── package.json
+├── next.config.ts
+├── tsconfig.json
+└── vitest.config.ts
+```
+
+### 🔌 Frontend — Wallet Connection (from `FreighterContext.tsx`)
+
+Full file: [`frontend/app/context/FreighterContext.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/context/FreighterContext.tsx)
+
+Multi-wallet initialization with Freighter, Albedo, and xBull:
+
+```tsx
+import { StellarWalletsKit, Networks } from "@creit.tech/stellar-wallets-kit";
+import { FreighterModule } from "@creit.tech/stellar-wallets-kit/modules/freighter";
+import { AlbedoModule } from "@creit.tech/stellar-wallets-kit/modules/albedo";
+import { xBullModule } from "@creit.tech/stellar-wallets-kit/modules/xbull";
+
+// Initialize kit once outside component so it persists
+let isKitInitialized = false;
+function initKit() {
+  if (typeof window === "undefined") return;
+  if (!isKitInitialized) {
+    StellarWalletsKit.init({
+      network: Networks.TESTNET,
+      selectedWalletId: "freighter",
+      modules: [
+        new FreighterModule(),
+        new AlbedoModule(),
+        new xBullModule()
+      ],
+    });
+    isKitInitialized = true;
+  }
+}
+```
+
+Connect flow with three distinct error types handled:
+
+```tsx
+const connect = useCallback(async () => {
+  try {
+    initKit();
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    const { address } = await StellarWalletsKit.authModal();
+    setState({
+      isInstalled: true, isConnected: true,
+      publicKey: address, isLoading: false, error: null,
+    });
+    showToast(`Connected to wallet`, "success");
+    void logEvent("wallet_connect", address, "testnet");
+  } catch (err: any) {
+    let errMsg = err.message || "Failed to connect to wallet.";
+    if (errMsg.toLowerCase().includes("reject") || errMsg.toLowerCase().includes("cancel")) {
+      errMsg = "Wallet connection rejected by user.";           // 1) user rejection
+    } else if (errMsg.toLowerCase().includes("not found") || errMsg.toLowerCase().includes("not installed")) {
+      errMsg = `Wallet is not installed or not found.`;         // 2) wallet not installed
+    }
+    setState((prev) => ({ ...prev, isLoading: false, error: errMsg })); // 3) generic failure
+    showToast(errMsg, "error");
+  }
+}, [showToast]);
+```
+
+### 🔗 Frontend — Smart Contract Integration (from `contractRead.ts` and `contract/page.tsx`)
+
+#### Read-only contract helper: [`frontend/lib/contractRead.ts`](https://github.com/bbkenny/FluxID/blob/main/frontend/lib/contractRead.ts)
+
+```tsx
+import * as StellarSdk from "@stellar/stellar-sdk";
+import { STELLAR_CONFIG } from "./constants";
+
+export async function readContract(
+  contractId: string,
+  method: string,
+  ...args: StellarSdk.xdr.ScVal[]
+): Promise<unknown> {
+  const server = new StellarSdk.rpc.Server(STELLAR_CONFIG.SOROBAN_RPC_URL);
+  const contract = new StellarSdk.Contract(contractId);
+  const source = new StellarSdk.Account(StellarSdk.Keypair.random().publicKey(), "0");
+
+  const tx = new StellarSdk.TransactionBuilder(source, {
+    fee: "100",
+    networkPassphrase: STELLAR_CONFIG.NETWORK_PASSPHRASE,
+  })
+    .addOperation(contract.call(method, ...args))
+    .setTimeout(30)
+    .build();
+
+  const sim = await server.simulateTransaction(tx);
+  if (StellarSdk.rpc.Api.isSimulationError(sim)) {
+    throw new Error(sim.error || "Simulation failed.");
+  }
+  const retval = (sim as StellarSdk.rpc.Api.SimulateTransactionSuccessResponse).result?.retval;
+  if (!retval) return null;
+  return StellarSdk.scValToNative(retval);
+}
+```
+
+#### Contract read/write UI: [`frontend/app/dashboard/contract/page.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/dashboard/contract/page.tsx)
+
+Reading the contract (`get_wallet_info`) from the frontend:
+
+```tsx
+import { readContract } from "../../../lib/contractRead";
+import * as StellarSdk from "@stellar/stellar-sdk";
+
+const DEFAULT_CONTRACT_ID = process.env.NEXT_PUBLIC_CONTRACT_ID
+  || "CAUICITFNLDMHPXARAXARFBS3JKRGZZP5CE7B4DTLFBCJB5F4U24CKBP";
+
+const handleRead = async () => {
+  const info = await readContract(
+    contractId,
+    "get_wallet_info",
+    StellarSdk.nativeToScVal(readWallet, { type: "address" })
+  );
+  // Displays score, risk level, and last-updated timestamp from on-chain data
+};
+```
+
+Writing to the contract (`set_score`) from the frontend with wallet signing:
+
+```tsx
+const handleWrite = async () => {
+  const server = new StellarSdk.rpc.Server("https://soroban-testnet.stellar.org");
+  const account = await server.getAccount(publicKey);
+  const contract = new StellarSdk.Contract(contractId);
+
+  const tx = new StellarSdk.TransactionBuilder(account, {
+    fee: StellarSdk.BASE_FEE,
+    networkPassphrase: StellarSdk.Networks.TESTNET,
+  })
+    .addOperation(
+      contract.call(
+        "set_score",
+        StellarSdk.nativeToScVal(publicKey, { type: "address" }),   // caller (admin)
+        StellarSdk.nativeToScVal(publicKey, { type: "address" }),   // wallet
+        StellarSdk.nativeToScVal(Number(writeScore), { type: "u32" }), // score
+        StellarSdk.nativeToScVal(Number(writeRisk), { type: "u32" }), // risk
+        StellarSdk.nativeToScVal(Buffer.from(dummyHash), { type: "bytes" }) // hash
+      )
+    )
+    .setTimeout(60)
+    .build();
+
+  const preparedTx = await server.prepareTransaction(tx);
+  const kit = getKit();
+  const signResult = await kit.signTransaction(preparedTx.toXDR(), {
+    address: publicKey,
+    networkPassphrase: StellarSdk.Networks.TESTNET
+  });
+  const signedTx = StellarSdk.TransactionBuilder.fromXDR(
+    signResult.signedTxXdr, StellarSdk.Networks.TESTNET
+  );
+  const response = await server.sendTransaction(signedTx);
+};
+```
+
+#### Stellar config: [`frontend/lib/constants.ts`](https://github.com/bbkenny/FluxID/blob/main/frontend/lib/constants.ts)
+
+```tsx
+export const STELLAR_CONFIG = {
+  HORIZON_URL: "https://horizon-testnet.stellar.org",
+  SOROBAN_RPC_URL: "https://soroban-testnet.stellar.org",
+  NETWORK_PASSPHRASE: "Test SDF Network ; September 2015",
+};
+```
+
+### 🔄 Cross-Check: Contract Function ↔ Frontend Function Matching
+
+| Smart Contract Function (Soroban) | Frontend File | Frontend Function | How It's Called |
+|---|---|---|---|
+| `set_score(caller, wallet, score, risk, hash)` | [`contract/page.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/dashboard/contract/page.tsx#L66) | `handleWrite()` | Builds a Soroban TX calling `contract.call("set_score", ...)`, signs via `kit.signTransaction()`, submits via `server.sendTransaction()` |
+| `get_wallet_info(wallet)` | [`contract/page.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/dashboard/contract/page.tsx#L31) | `handleRead()` | Calls `readContract(contractId, "get_wallet_info", ...)` which simulates the TX via Soroban RPC |
+| `get_score(wallet)` | [`lib/contractRead.ts`](https://github.com/bbkenny/FluxID/blob/main/frontend/lib/contractRead.ts) | `readContract()` | Generic read helper used across the app to simulate contract calls |
+| `is_oracle_authorized(oracle)` | [`smartcontract/contracts/liquidity_identity/src/lib.rs`](https://github.com/bbkenny/FluxID/blob/main/smartcontract/contracts/liquidity_identity/src/lib.rs#L85) | Cross-contract call | Called automatically by `set_score` via `env.invoke_contract` to the OracleRegistry |
+| Wallet connect | [`FreighterContext.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/context/FreighterContext.tsx#L88) | `connect()` | `StellarWalletsKit.authModal()` — supports Freighter, Albedo, xBull |
+| Transaction signing | [`contract/page.tsx`](https://github.com/bbkenny/FluxID/blob/main/frontend/app/dashboard/contract/page.tsx#L102) | `kit.signTransaction()` | Signs prepared Soroban TX via StellarWalletsKit |
+
 ### Added Features for Level 3
 - **Advanced Smart Contracts & Inter-contract Communication:** Built and integrated the `OracleRegistry` contract, and programmed the `LiquidityIdentity` contract to dynamically communicate with it to verify authorized score providers.
 - **Event Streaming & Real-time Updates:** Implemented `env.events().publish()` inside the contract so external indexers and the frontend can listen to score changes in real-time.

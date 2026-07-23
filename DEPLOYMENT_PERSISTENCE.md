@@ -5,11 +5,11 @@
 The backend stores usage events, feedback, and wallet/protocol history. By
 default these are append-only JSONL files on the local filesystem:
 
-| File | Written by |
-|------|-----------|
-| `events.jsonl` | `metrics.service.ts` (wallet connects, score runs) |
-| `feedback.jsonl` | `metrics.service.ts` (user feedback) |
-| `wallet_history.jsonl` | `history.service.ts` (per-wallet score history) |
+| File                     | Written by                                          |
+| ------------------------ | --------------------------------------------------- |
+| `events.jsonl`           | `metrics.service.ts` (wallet connects, score runs)  |
+| `feedback.jsonl`         | `metrics.service.ts` (user feedback)                |
+| `wallet_history.jsonl`   | `history.service.ts` (per-wallet score history)     |
 | `protocol_history.jsonl` | `history.service.ts` (Protocol Intelligence cohort) |
 
 By default they live in `<cwd>/data` — see `FLUXID_DATA_DIR` in
@@ -106,7 +106,11 @@ keeps the JSONL files.
 
 ---
 
+==================================================
+
 ## On-chain score save — "Contract not configured"
+
+==================================================
 
 When you click **Save on-chain** on the dashboard and get `Contract not
 configured`, that is **not a frontend bug**. The button faithfully relays a
@@ -123,10 +127,10 @@ message the backend returned. Here's the whole chain.
 
 ### The two values it needs
 
-| Needs | Sourced from | Notes |
-|-------|--------------|-------|
-| `contractId` | `MAINNET_CONTRACT_ID` **or** `TESTNET_CONTRACT_ID` | picked by the network you analyzed on (`stellar.config.ts:17,23`) |
-| `adminSecret` (oracle signer) | `ORACLE_SECRET_KEY` → `ADMIN_SECRET_KEY` → `FLUXID_ADMIN_SECRET_KEY` | first one set wins (`contract.service.ts:82`) |
+| Needs                         | Sourced from                                                         | Notes                                                             |
+| ----------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `contractId`                  | `MAINNET_CONTRACT_ID` **or** `TESTNET_CONTRACT_ID`                   | picked by the network you analyzed on (`stellar.config.ts:17,23`) |
+| `adminSecret` (oracle signer) | `ORACLE_SECRET_KEY` → `ADMIN_SECRET_KEY` → `FLUXID_ADMIN_SECRET_KEY` | first one set wins (`contract.service.ts:82`)                     |
 
 The oracle key is what signs the `set_score` transaction — the contract stores
 the score, risk, timestamp and a hash of the scoring inputs, then emits a
